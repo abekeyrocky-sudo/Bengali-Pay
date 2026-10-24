@@ -12,8 +12,8 @@ import {
   Award,
   ChevronRight
 } from 'lucide-react';
-import secondImgBanner from '../assets/2nd-img-banner.png';
-import homeBanner3rd from '../assets/home-banner-3rd.png';
+import secondImgBanner from '../assets/2nd-img-banner.jpg';
+import homeBanner3rd from '../assets/home-banner-3rd.jpg';
 import balanceCardBg from '../assets/balance-card-bg.png';
 
 export const HomeScreen = () => {
