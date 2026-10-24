@@ -14,6 +14,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import cigaretteIcon from '../assets/cigarette-icon.png';
+import taskPageImg from '../assets/task-page-img.jpg';
 
 export const TasksScreen = () => {
   const { 
@@ -290,51 +291,30 @@ export const TasksScreen = () => {
         })}
       </div>
 
-      {/* Bottom Promo Banner: "আরো কাজ করুন আরো টোকেন জিতুন!" */}
-      <div style={{
-        background: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)',
-        border: '1.5px solid #fde047',
-        borderRadius: '20px',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: '6px',
-        boxShadow: '0 4px 15px rgba(234, 179, 8, 0.15)'
-      }}>
-        <div style={{ flex: 1 }}>
-          <h3 style={{
-            fontSize: '17px',
-            fontWeight: '800',
-            color: '#854d0e',
-            fontFamily: "'Noto Serif Bengali', serif"
-          }}>
-            আরো কাজ করুন<br />
-            <span style={{ color: '#15803d' }}>আরো টোকেন জিতুন!</span>
-          </h3>
-          <p style={{
-            fontSize: '11px',
-            color: '#a16207',
-            marginTop: '4px'
-          }}>
-            প্রতিদিন নতুন নতুন বোনাস ও রেফারেল অফার!
-          </p>
-        </div>
-
-        <div style={{
-          width: '76px',
-          height: '76px',
-          borderRadius: '50%',
+      {/* Bottom Promo Banner: task-page-img.jpg */}
+      <div 
+        style={{
+          borderRadius: '20px',
           overflow: 'hidden',
-          border: '2px solid #ca8a04',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-        }}>
-          <img 
-            src="/assets/mascot_boy.jpg" 
-            alt="Mascot Boy" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-          />
-        </div>
+          boxShadow: '0 4px 16px rgba(234, 179, 8, 0.16)',
+          lineHeight: 0,
+          marginTop: '6px',
+          cursor: 'pointer',
+          transition: 'transform 0.15s ease'
+        }}
+        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        <img 
+          src={taskPageImg} 
+          alt="আরো কাজ করুন আরো টোকেন জিতুন!" 
+          style={{ 
+            width: '100%', 
+            height: 'auto', 
+            display: 'block',
+            objectFit: 'cover'
+          }} 
+        />
       </div>
 
       {/* MODAL 1: Watch Video Simulation */}
