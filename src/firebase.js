@@ -16,15 +16,15 @@ import {
 } from "firebase/firestore";
 import { getDatabase, ref, set, get, onValue } from "firebase/database";
 
-// Your web app's Firebase configuration provided by Firebase Console
+// Your web app's Firebase configuration loaded from Vite environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyCiF8QAMmXXUPAnOBvsZ8J4uc1bY4PHaoI",
-  authDomain: "bengali-pay.firebaseapp.com",
-  projectId: "bengali-pay",
-  storageBucket: "bengali-pay.firebasestorage.app",
-  messagingSenderId: "1041405609011",
-  appId: "1:1041405609011:web:afcafb83732c9cb6368f46",
-  measurementId: "G-59QKDTTTJ3"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "bengali-pay.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "bengali-pay",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "bengali-pay.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1041405609011",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1041405609011:web:afcafb83732c9cb6368f46",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-59QKDTTTJ3"
 };
 
 // Initialize Firebase App
