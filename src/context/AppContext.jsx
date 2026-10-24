@@ -1,13 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { sounds } from '../utils/audio';
-import { getUserId, subscribeUserData, saveUserToFirestore } from '../firebase';
+import { getUserId, getUserFromFirestore, saveUserToFirestore } from '../firebase';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [userId] = useState(() => getUserId());
-  const isInitialSync = useRef(true);
+  const isLoaded = useRef(false);
+  const lastSavedJson = useRef('');
+  const saveTimerRef = useRef(null);
 
   // Real database-driven states (starting clean for actual accounts)
   const [balance, setBalance] = useState(() => {
@@ -50,61 +52,90 @@ export const AppProvider = ({ children }) => {
     { id: 'survey', title: 'Complete Survey', reward: '+3 ৳ Token', amount: 3, type: 'token', action: 'Start', done: false }
   ]);
 
-  // Firebase Realtime Sync on mount
+  // Fetch remote user data once on mount (Safe single fetch, no infinite loop)
   useEffect(() => {
-    const unsubscribe = subscribeUserData(userId, (remoteData) => {
-      if (remoteData) {
-        if (remoteData.balance !== undefined) setBalance(remoteData.balance);
-        if (remoteData.tokens !== undefined) setTokens(remoteData.tokens);
-        if (remoteData.spinsLeft !== undefined) setSpinsLeft(remoteData.spinsLeft);
-        if (remoteData.userLevel !== undefined) setUserLevel(remoteData.userLevel);
-        if (remoteData.userXp !== undefined) setUserXp(remoteData.userXp);
-        if (remoteData.phone !== undefined) setUserPhone(remoteData.phone);
-        if (remoteData.dailyClaimed !== undefined) setDailyClaimed(remoteData.dailyClaimed);
-        if (remoteData.transactions) setTransactions(remoteData.transactions);
-        if (remoteData.tasks) setTasks(remoteData.tasks);
-      } else {
-        // Initialize user in Firestore if not existing
-        saveUserToFirestore(userId, {
-          userId,
-          balance,
-          tokens,
-          spinsLeft,
-          userLevel,
-          userXp,
-          phone: userPhone,
-          dailyClaimed,
-          transactions,
-          tasks,
-          createdAt: new Date().toISOString()
-        });
-      }
-      isInitialSync.current = false;
-    });
+    let isMounted = true;
 
-    return () => unsubscribe();
+    getUserFromFirestore(userId)
+      .then((remoteData) => {
+        if (!isMounted) return;
+
+        if (remoteData) {
+          if (remoteData.balance !== undefined) setBalance(remoteData.balance);
+          if (remoteData.tokens !== undefined) setTokens(remoteData.tokens);
+          if (remoteData.spinsLeft !== undefined) setSpinsLeft(remoteData.spinsLeft);
+          if (remoteData.userLevel !== undefined) setUserLevel(remoteData.userLevel);
+          if (remoteData.userXp !== undefined) setUserXp(remoteData.userXp);
+          if (remoteData.phone !== undefined) setUserPhone(remoteData.phone);
+          if (remoteData.dailyClaimed !== undefined) setDailyClaimed(remoteData.dailyClaimed);
+          if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
+          if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
+        }
+
+        // Initialize lastSaved snapshot
+        const initialPayload = {
+          balance: remoteData?.balance ?? balance,
+          tokens: remoteData?.tokens ?? tokens,
+          spinsLeft: remoteData?.spinsLeft ?? spinsLeft,
+          userLevel: remoteData?.userLevel ?? userLevel,
+          userXp: remoteData?.userXp ?? userXp,
+          phone: remoteData?.phone ?? userPhone,
+          dailyClaimed: remoteData?.dailyClaimed ?? dailyClaimed
+        };
+        lastSavedJson.current = JSON.stringify(initialPayload);
+        isLoaded.current = true;
+      })
+      .catch((err) => {
+        console.warn("Could not load Firestore data, using local storage:", err?.message || err);
+        isLoaded.current = true;
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId]);
 
-  // Sync state to local storage & Firestore
+  // Sync state to local storage immediately & Firestore with debouncing
   useEffect(() => {
     localStorage.setItem('bp_balance', balance.toString());
     localStorage.setItem('bp_tokens', tokens.toString());
     localStorage.setItem('bp_spins', spinsLeft.toString());
     localStorage.setItem('bp_phone', userPhone);
 
-    if (!isInitialSync.current) {
+    // Only save to Firestore if remote load is finished
+    if (!isLoaded.current) return;
+
+    const currentPayload = {
+      balance,
+      tokens,
+      spinsLeft,
+      userLevel,
+      userXp,
+      phone: userPhone,
+      dailyClaimed
+    };
+
+    const currentJson = JSON.stringify(currentPayload);
+    // Don't save if nothing actually changed
+    if (currentJson === lastSavedJson.current) return;
+
+    // Debounce save by 2000ms so rapid clicks don't spam Firestore
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    saveTimerRef.current = setTimeout(() => {
+      lastSavedJson.current = currentJson;
       saveUserToFirestore(userId, {
-        balance,
-        tokens,
-        spinsLeft,
-        userLevel,
-        userXp,
-        phone: userPhone,
-        dailyClaimed,
+        ...currentPayload,
         transactions,
         tasks
       });
-    }
+    }, 2000);
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
   }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, transactions, tasks, userId]);
 
   // Sound toggle

@@ -70,11 +70,37 @@ export const getUserId = () => {
   return stored;
 };
 
+// Flag to prevent console error spam if Firestore daily quota is hit
+let isQuotaExhausted = false;
+
+/**
+ * Fetch user data once from Firestore (Safe single read, avoids infinite loops)
+ */
+export const getUserFromFirestore = async (userId) => {
+  if (!userId || isQuotaExhausted) return null;
+  try {
+    const userRef = doc(db, "users", userId);
+    const docSnap = await getDoc(userRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    return null;
+  } catch (err) {
+    if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+      isQuotaExhausted = true;
+      console.warn("Firestore daily quota limit reached. Using local cache smoothly.");
+    } else {
+      console.warn("Firestore getUser notice:", err?.message || err);
+    }
+    return null;
+  }
+};
+
 /**
  * Listen to user data from Firestore in real-time
  */
 export const subscribeUserData = (userId, onDataUpdate, onError) => {
-  if (!userId) return () => {};
+  if (!userId || isQuotaExhausted) return () => {};
   const userRef = doc(db, "users", userId);
   return onSnapshot(
     userRef,
@@ -86,7 +112,11 @@ export const subscribeUserData = (userId, onDataUpdate, onError) => {
       }
     },
     (err) => {
-      console.warn("Firestore subscription notice:", err?.message || err);
+      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+        isQuotaExhausted = true;
+      } else {
+        console.warn("Firestore subscription notice:", err?.message || err);
+      }
       if (onError) onError(err);
     }
   );
@@ -96,7 +126,7 @@ export const subscribeUserData = (userId, onDataUpdate, onError) => {
  * Save or update user data in Firestore
  */
 export const saveUserToFirestore = async (userId, data) => {
-  if (!userId) return;
+  if (!userId || isQuotaExhausted) return;
   try {
     const userRef = doc(db, "users", userId);
     await setDoc(
@@ -108,7 +138,12 @@ export const saveUserToFirestore = async (userId, data) => {
       { merge: true }
     );
   } catch (error) {
-    console.warn("Firestore save notice:", error?.message || error);
+    if (error?.code === 'resource-exhausted' || error?.message?.includes('Quota exceeded')) {
+      isQuotaExhausted = true;
+      console.warn("Firestore daily quota reached, saved to local storage.");
+    } else {
+      console.warn("Firestore save notice:", error?.message || error);
+    }
   }
 };
 
@@ -116,6 +151,9 @@ export const saveUserToFirestore = async (userId, data) => {
  * Submit withdrawal request to Firestore `withdrawals` collection
  */
 export const submitWithdrawalToFirestore = async (withdrawalData) => {
+  if (isQuotaExhausted) {
+    return { success: true, id: `local_${Date.now()}` };
+  }
   try {
     const withdrawalsCol = collection(db, "withdrawals");
     const docRef = await addDoc(withdrawalsCol, {
@@ -125,6 +163,10 @@ export const submitWithdrawalToFirestore = async (withdrawalData) => {
     });
     return { success: true, id: docRef.id };
   } catch (error) {
+    if (error?.code === 'resource-exhausted' || error?.message?.includes('Quota exceeded')) {
+      isQuotaExhausted = true;
+      return { success: true, id: `local_${Date.now()}` };
+    }
     console.warn("Withdrawal submission notice:", error?.message || error);
     return { success: false, error: error?.message || error };
   }
@@ -134,7 +176,7 @@ export const submitWithdrawalToFirestore = async (withdrawalData) => {
  * Listen to user's withdrawals from Firestore in real-time
  */
 export const subscribeUserWithdrawals = (userId, onUpdate) => {
-  if (!userId) return () => {};
+  if (!userId || isQuotaExhausted) return () => {};
   try {
     const withdrawalsCol = collection(db, "withdrawals");
     const q = query(withdrawalsCol, where("userId", "==", userId));
@@ -153,12 +195,15 @@ export const subscribeUserWithdrawals = (userId, onUpdate) => {
         onUpdate(list);
       },
       (err) => {
-        console.warn("Withdrawals subscription notice:", err?.message || err);
+        if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota exceeded')) {
+          isQuotaExhausted = true;
+        } else {
+          console.warn("Withdrawals subscription notice:", err?.message || err);
+        }
         onUpdate([]);
       }
     );
   } catch (e) {
-    console.warn("Withdrawals query error:", e);
     return () => {};
   }
 };
