@@ -1,0 +1,200 @@
+/**
+ * Bengali Pay - Firebase Cloud Functions
+ * Serverless Telegram Bot Webhook Backend (Node.js 20 ESM)
+ */
+
+import { onRequest } from "firebase-functions/v2/https";
+import * as logger from "firebase-functions/logger";
+
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const APP_URL = process.env.APP_URL || "https://bengali-pay.netlify.app/";
+const API_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+/**
+ * Call Telegram API
+ */
+async function telegramApi(method, body = {}) {
+  try {
+    const res = await fetch(`${API_BASE}/${method}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    return await res.json();
+  } catch (err) {
+    logger.error(`Telegram [${method}] Error:`, err);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Send Welcome Message with WebApp Play button
+ */
+async function sendWelcome(chatId, user) {
+  const message = 
+`<b>স্বাগতম Bengali Pay-তে!</b>
+কামলা দাও, টাস্ক করো আর রিওয়ার্ড কামাও! 
+
+গেম • টাস্ক • রেফার
+বিকাশ ও নগদে উত্তোলনের সুযোগ!
+
+নিচের Start বাটনে ক্লিক করে শুরু করুন।`;
+
+  const replyMarkup = {
+    inline_keyboard: [
+      [
+        {
+          text: "Start",
+          web_app: { url: APP_URL },
+          style: "success"
+        }
+      ],
+      [
+        {
+          text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+          url: "https://t.me/BengaliPay_bot",
+          style: "danger"
+        }
+      ],
+      [
+        {
+          text: "সাহায্য ও নিয়ম",
+          callback_data: "help_info",
+          style: "success"
+        }
+      ]
+    ]
+  };
+
+  const photoUrl = `${APP_URL}start-image.jpg`;
+  const photoRes = await telegramApi("sendPhoto", {
+    chat_id: chatId,
+    photo: photoUrl,
+    caption: message,
+    parse_mode: "HTML",
+    reply_markup: replyMarkup
+  });
+
+  if (photoRes && photoRes.ok) return photoRes;
+
+  return await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: message,
+    parse_mode: "HTML",
+    reply_markup: replyMarkup
+  });
+}
+
+/**
+ * Send Help Information
+ */
+async function sendHelp(chatId) {
+  const message = 
+`ℹ️ <b>Bengali Pay সাহায্য কেন্দ্র:</b>
+
+1. <b>টোকেন থেকে টাকা:</b>
+প্রতিটি টাস্ক এবং স্পিন থেকে প্রাপ্ত টোকেন আপনার অ্যাকাউন্টে জমা হবে।
+
+2. <b>উইথড্র নিয়ম:</b>
+সর্বনিম্ন ৫০০ টাকা হলে বিকাশ বা নগদ নম্বরে উইথড্র রিকোয়েস্ট পাঠাতে পারবেন। সাধারণত ১২ থেকে ২৪ ঘণ্টার মধ্যে পেমেন্ট প্রসেস হয়।
+
+3. <b>ডেইলি চেক-ইন:</b>
+প্রতিদিন অ্যাপ ওপেন করে দৈনিক ৫টি ফ্রি টোকেন ক্লেইম করুন!
+
+এখনই খেলতে নিচের বাটনে ক্লিক করুন:`;
+
+  const replyMarkup = {
+    inline_keyboard: [
+      [
+        {
+          text: "🚀 অ্যাপ ওপেন করুন",
+          web_app: { url: APP_URL }
+        }
+      ]
+    ]
+  };
+
+  return await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: message,
+    parse_mode: "HTML",
+    reply_markup: replyMarkup
+  });
+}
+
+/**
+ * Primary Telegram Bot Webhook Endpoint
+ * Telegram will POST updates directly here
+ */
+export const telegramBot = onRequest(
+  { cors: true, maxInstances: 15, timeoutSeconds: 30 },
+  async (req, res) => {
+    // Health check on GET
+    if (req.method !== "POST") {
+      res.status(200).send("✅ Bengali Pay Telegram Bot Cloud Function is Active!");
+      return;
+    }
+
+    const update = req.body;
+    if (!update) {
+      res.status(200).send("No update");
+      return;
+    }
+
+    try {
+      // 1. Text Messages
+      if (update.message && update.message.text) {
+        const chatId = update.message.chat.id;
+        const text = update.message.text.trim();
+        const user = update.message.from || {};
+
+        logger.info(`Incoming command [${text}] from ${user.username || user.first_name}`);
+
+        if (text.startsWith("/start") || text.startsWith("/play")) {
+          await sendWelcome(chatId, user);
+        } else if (text.startsWith("/help")) {
+          await sendHelp(chatId);
+        } else {
+          await sendWelcome(chatId, user);
+        }
+      }
+
+      // 2. Inline Callback Queries
+      if (update.callback_query) {
+        const cb = update.callback_query;
+        const chatId = cb.message?.chat?.id;
+        if (cb.data === "help_info" && chatId) {
+          await sendHelp(chatId);
+        }
+        await telegramApi("answerCallbackQuery", {
+          callback_query_id: cb.id
+        });
+      }
+    } catch (err) {
+      logger.error("Error processing update:", err);
+    }
+
+    // Always respond 200 OK to Telegram
+    res.status(200).json({ ok: true });
+  }
+);
+
+/**
+ * Helper endpoint to configure Telegram Chat Menu Button
+ * Visit this endpoint once in browser or curl to set the button
+ */
+export const setupMenu = onRequest(
+  { cors: true, timeoutSeconds: 15 },
+  async (req, res) => {
+    const result = await telegramApi("setChatMenuButton", {
+      menu_button: {
+        type: "web_app",
+        text: "Play ৳",
+        web_app: {
+          url: APP_URL
+        }
+      }
+    });
+    res.status(200).json(result);
+  }
+);

@@ -106,7 +106,7 @@ export const TasksScreen = () => {
     if (task.id === 'video') startVideoTask();
     else if (task.id === 'daily') handleDailyCheckin();
     else if (task.id === 'game') navigateTo('game');
-    else if (task.id === 'refer') setActiveModal('refer');
+    else if (task.id === 'refer') navigateTo('invite');
     else if (task.id === 'survey') setActiveModal('survey');
   };
 

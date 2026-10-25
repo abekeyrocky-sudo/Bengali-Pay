@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "bot": "node bot.js",
+    "deploy:functions": "firebase deploy --only functions",
+    "set:webhook": "node functions/set-webhook.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },

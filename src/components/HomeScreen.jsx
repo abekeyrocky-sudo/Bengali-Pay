@@ -372,7 +372,7 @@ export const HomeScreen = () => {
 
         {/* 4. Invite Friends */}
         <button
-          onClick={() => navigateTo('profile')}
+          onClick={() => navigateTo('invite')}
           style={{
             background: '#ffffff',
             border: '1px solid #e0f2fe',

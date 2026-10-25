@@ -7,13 +7,26 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build
 node_modules
+functions/node_modules
 dist
 dist-ssr
 *.local
+firebase-debug.log
+firebase-debug.*.log
+
+# Environment & Secrets (NEVER COMMIT)
 .env
+.env.*
 .env.local
 .env.*.local
+functions/.env
+functions/.env.*
+*.pem
+*.key
+serviceAccountKey*.json
+service-account*.json
 
 # Editor directories and files
 .vscode/*

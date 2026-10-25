@@ -29,7 +29,7 @@ export const ProfileScreen = () => {
   const menuItems = [
     { id: 'tasks', label: 'My Tasks', iconName: 'event_note', action: () => navigateTo('tasks') },
     { id: 'history', label: 'Withdraw History', iconName: 'paid', action: () => setActiveModal('history') },
-    { id: 'invite', label: 'Invite Friends', iconName: 'group', action: () => navigateTo('tasks') },
+    { id: 'invite', label: 'Invite Friends', iconName: 'group', action: () => navigateTo('invite') },
     { id: 'help', label: 'Help & Support', iconName: 'help', action: () => setActiveModal('help') },
     { id: 'settings', label: 'Settings', iconName: 'settings', action: () => setActiveModal('settings') }
   ];
