@@ -80,27 +80,27 @@ async function handleStartCommand(chatId, user) {
 গেম • টাস্ক • রেফার
 বিকাশ ও নগদে উত্তোলনের সুযোগ!
 
-নিচের Start বাটনে ক্লিক করে শুরু করুন।`;
+নিচের বাটনে ক্লিক করে শুরু করুন।`;
 
   const replyMarkup = {
     inline_keyboard: [
       [
         {
-          text: 'Start',
+          text: 'অ্যাপ খুলুন',
           web_app: { url: APP_URL },
           style: 'success'
         }
       ],
       [
         {
-          text: 'অফিসিয়াল গ্রুপ / চ্যানেল',
+          text: 'অফিশিয়াল চ্যানেল',
           url: 'https://t.me/BengaliPay_bot',
           style: 'danger'
         }
       ],
       [
         {
-          text: 'সাহায্য ও নিয়ম',
+          text: 'নিয়ম ও সাহায্য',
           callback_data: 'help_info',
           style: 'success'
         }

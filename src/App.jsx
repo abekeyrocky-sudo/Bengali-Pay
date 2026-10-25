@@ -8,8 +8,10 @@ import { WalletScreen } from './components/WalletScreen';
 import { WithdrawScreen } from './components/WithdrawScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { InviteScreen } from './components/InviteScreen';
+import { NotificationsScreen } from './components/NotificationsScreen';
 import { BottomNav } from './components/BottomNav';
 import { ActionModal } from './components/ActionModal';
+import { ChannelGateModal } from './components/ChannelGateModal';
 import { initTelegramApp, updateTelegramBackButton } from './utils/telegram';
 
 const screenBgMap = {
@@ -20,7 +22,8 @@ const screenBgMap = {
   wallet: '#f8fafc',
   withdraw: '#f8fafc',
   profile: '#f8fafc',
-  invite: '#f8fafc'
+  invite: '#f8fafc',
+  notifications: '#f8fafc'
 };
 
 const MainAppContent = () => {
@@ -76,6 +79,8 @@ const MainAppContent = () => {
         return <ProfileScreen />;
       case 'invite':
         return <InviteScreen />;
+      case 'notifications':
+        return <NotificationsScreen />;
       default:
         return <HomeScreen />;
     }
@@ -88,7 +93,7 @@ const MainAppContent = () => {
       {/* Real Telegram Mini App / Web App Container */}
       <div className="app-container">
         {/* Active Screen Body */}
-        <main className={`app-screen-body ${currentScreen === 'splash' ? 'splash-screen' : ''} ${!showBottomNav ? 'no-nav' : ''}`}>
+        <main className={`app-screen-body ${currentScreen === 'splash' ? 'splash-screen' : ''} ${currentScreen === 'game' ? 'game-screen' : ''} ${!showBottomNav ? 'no-nav' : ''}`}>
           {renderActiveScreen()}
         </main>
 
@@ -97,6 +102,9 @@ const MainAppContent = () => {
 
         {/* Global Action Modal (Success, Warn, Fail) */}
         <ActionModal />
+
+        {/* Mandatory Telegram Channel Gate Modal */}
+        <ChannelGateModal />
       </div>
     </div>
   );

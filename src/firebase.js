@@ -245,3 +245,28 @@ export const recordReferralOnBackend = async (user, referrerParam) => {
     return null;
   }
 };
+
+/**
+ * Verify if user is a member of @BengaliPay channel via Telegram getChatMember
+ */
+export const checkChannelMembershipAPI = async (userId) => {
+  const cleanId = String(userId || "").replace("tg_", "").trim();
+  if (!cleanId) return { isMember: false, reason: "no_user_id" };
+
+  const endpoint = "https://us-central1-bengali-pay.cloudfunctions.net/telegramBot";
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "check_channel_member",
+        userId: cleanId
+      })
+    });
+    const data = await res.json();
+    return { isMember: Boolean(data && data.isMember), status: data?.status };
+  } catch (err) {
+    console.warn("Backend channel membership check error:", err);
+    return { isMember: false, error: err.message };
+  }
+};

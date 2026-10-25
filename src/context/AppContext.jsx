@@ -103,6 +103,131 @@ export const AppProvider = ({ children }) => {
   // Real Transactions list (starts clean from DB)
   const [transactions, setTransactions] = useState([]);
 
+  // Notifications State (persisted locally & synced with Firestore)
+  const DEFAULT_NOTIFICATIONS = [
+    {
+      id: 'notif_1',
+      category: 'rewards',
+      type: 'reward',
+      title: 'Reward Received!',
+      message: 'You have got 5.00 ৳ as daily reward.',
+      time: 'Today, 9:15 AM',
+      timestamp: Date.now() - 3600000 * 2,
+      read: false
+    },
+    {
+      id: 'notif_2',
+      category: 'updates',
+      type: 'update',
+      title: 'Big Update!',
+      message: 'New spin wheel is now available.',
+      time: 'Yesterday, 8:42 PM',
+      timestamp: Date.now() - 3600000 * 24,
+      read: false
+    },
+    {
+      id: 'notif_3',
+      category: 'rewards',
+      type: 'withdraw',
+      title: 'Withdraw Successful!',
+      message: 'Your request for 500 ৳ has been approved.',
+      time: 'Yesterday, 6:20 PM',
+      timestamp: Date.now() - 3600000 * 26,
+      read: false
+    },
+    {
+      id: 'notif_4',
+      category: 'offers',
+      type: 'offer',
+      title: 'Special Offer!',
+      message: 'Get 50 ৳ Bonus for inviting more friends.',
+      time: '17 Oct, 2026 • 7:30 PM',
+      timestamp: Date.now() - 3600000 * 48,
+      read: true
+    },
+    {
+      id: 'notif_5',
+      category: 'rewards',
+      type: 'referral',
+      title: 'Referral Bonus!',
+      message: 'Your friend joined. You got 50.00 ৳.',
+      time: '16 Oct, 2026 • 5:12 PM',
+      timestamp: Date.now() - 3600000 * 72,
+      read: true
+    },
+    {
+      id: 'notif_6',
+      category: 'updates',
+      type: 'system',
+      title: 'System Message',
+      message: 'Thanks for being with us! ❤️',
+      time: '15 Oct, 2026 • 10:00 AM',
+      timestamp: Date.now() - 3600000 * 96,
+      read: true
+    }
+  ];
+
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bp_notifications');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return DEFAULT_NOTIFICATIONS;
+  });
+
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
+  const markNotificationAsRead = (id) => {
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+      localStorage.setItem('bp_notifications', JSON.stringify(updated));
+      saveUserToFirestore(userId, { notifications: updated });
+      return updated;
+    });
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      localStorage.setItem('bp_notifications', JSON.stringify(updated));
+      saveUserToFirestore(userId, { notifications: updated });
+      return updated;
+    });
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    localStorage.setItem('bp_notifications', JSON.stringify([]));
+    saveUserToFirestore(userId, { notifications: [] });
+  };
+
+  const addNotification = ({ category = 'rewards', type = 'reward', title = 'New Notification', message = '' }) => {
+    const now = new Date();
+    const timeFormatted = `Today, ${now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`;
+
+    const newNotif = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      category,
+      type,
+      title,
+      message,
+      time: timeFormatted,
+      timestamp: Date.now(),
+      read: false
+    };
+
+    setNotifications(prev => {
+      // Prevent rapid duplicate clicks
+      if (prev.length > 0 && prev[0].title === title && prev[0].message === message && (Date.now() - prev[0].timestamp < 1500)) {
+        return prev;
+      }
+      const updated = [newNotif, ...prev];
+      localStorage.setItem('bp_notifications', JSON.stringify(updated));
+      saveUserToFirestore(userId, { notifications: updated });
+      return updated;
+    });
+  };
+
   // Tasks state
   const [tasks, setTasks] = useState([
     { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳ Token', amount: 1, type: 'token', action: 'Watch', done: false },
@@ -160,6 +285,12 @@ export const AppProvider = ({ children }) => {
           }
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
           if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
+          if (Array.isArray(remoteData.notifications) && remoteData.notifications.length > 0) {
+            setNotifications(remoteData.notifications);
+            localStorage.setItem('bp_notifications', JSON.stringify(remoteData.notifications));
+          } else if (remoteData && !remoteData.notifications) {
+            saveUserToFirestore(userId, { notifications: DEFAULT_NOTIFICATIONS });
+          }
 
           // Restore Telegram metadata if previously tracked in Firestore
           if (remoteData.telegramName && !tgSession?.fullName) setUserName(remoteData.telegramName);
@@ -242,14 +373,15 @@ export const AppProvider = ({ children }) => {
       saveUserToFirestore(userId, {
         ...currentPayload,
         transactions,
-        tasks
+        tasks,
+        notifications
       });
     }, 2000);
 
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, transactions, tasks, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
+  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
 
   // Sound toggle
   const toggleSound = () => {
@@ -284,6 +416,22 @@ export const AppProvider = ({ children }) => {
         },
         ...prev
       ]);
+
+      if (takaAmount > 0) {
+        addNotification({
+          category: 'rewards',
+          type: 'reward',
+          title: 'Reward Received!',
+          message: `You have got ${takaAmount.toFixed(2)} ৳ as ${title.toLowerCase()}.`
+        });
+      } else if (tokenAmount > 0) {
+        addNotification({
+          category: 'rewards',
+          type: 'reward',
+          title: 'Token Reward Received!',
+          message: `You earned ${tokenAmount} tokens for ${title.toLowerCase()}.`
+        });
+      }
     }
   };
 
@@ -358,7 +506,13 @@ export const AppProvider = ({ children }) => {
         referralCount,
         setReferralCount,
         referralBonus,
-        setReferralBonus
+        setReferralBonus,
+        notifications,
+        unreadNotificationsCount,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
+        clearAllNotifications,
+        addNotification
       }}
     >
       {children}

@@ -19,7 +19,7 @@ import inviteTeamArt from '../assets/invite-team-art.png';
 import inviteGiftArt from '../assets/invite-gift-art.png';
 
 export const InviteScreen = () => {
-  const { userId, userTelegramId, tokens, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess } = useApp();
+  const { userId, userTelegramId, tokens, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess, addNotification } = useApp();
   const [copied, setCopied] = useState(false);
 
   const displayBonus = referralBonus || (referralCount * 50);
@@ -50,6 +50,15 @@ export const InviteScreen = () => {
       spread: 60,
       origin: { y: 0.6 }
     });
+
+    if (typeof addNotification === 'function') {
+      addNotification({
+        category: 'offers',
+        type: 'offer',
+        title: 'Special Offer!',
+        message: 'Get 50 ৳ Bonus for inviting more friends.'
+      });
+    }
 
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}`;
     

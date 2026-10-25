@@ -31,7 +31,8 @@ export const WithdrawScreen = () => {
     setTransactions,
     notifySuccess,
     notifyWarn,
-    notifyFail
+    notifyFail,
+    addNotification
   } = useApp();
 
   const [method, setMethod] = useState('bkash'); // 'bkash' or 'nagad'
@@ -149,6 +150,15 @@ export const WithdrawScreen = () => {
     setIsSubmitting(false);
 
     if (res.success) {
+      if (typeof addNotification === 'function') {
+        addNotification({
+          category: 'rewards',
+          type: 'withdraw',
+          title: 'Withdraw Requested!',
+          message: `Your request for ${numAmount} ৳ (${method.toUpperCase()}) has been submitted.`
+        });
+      }
+
       notifySuccess(
         'উইথড্র আবেদন সফল!',
         `আপনার ৳${numAmount} টাকা উত্তোলনের আবেদন সফলভাবে ফায়ারবেস ডেটাবেজে জমা হয়েছে। ট্রানজেকশন আইডি: ${trxId}`

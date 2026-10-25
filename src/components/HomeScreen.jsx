@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
+import { sounds } from '../utils/audio';
 import { 
   Bell, 
   Tv, 
@@ -28,10 +29,9 @@ export const HomeScreen = () => {
     dailyClaimed,
     setDailyClaimed,
     notifySuccess,
-    notifyWarn
+    notifyWarn,
+    unreadNotificationsCount = 0
   } = useApp();
-
-  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const handleDailyCheckin = () => {
     if (!dailyClaimed) {
@@ -117,51 +117,49 @@ export const HomeScreen = () => {
 
         {/* Notification Bell */}
         <button 
-          onClick={() => setNotificationOpen(!notificationOpen)}
+          id="btn-home-notifications"
+          onClick={() => {
+            sounds.playClick();
+            navigateTo('notifications');
+          }}
           style={{
             position: 'relative',
             width: '42px',
             height: '42px',
             borderRadius: '50%',
             background: '#ffffff',
-            border: '1px solid #e2e8f0',
+            border: '1.5px solid #e2e8f0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#334155',
+            color: '#1e293b',
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            transition: 'transform 0.15s ease'
           }}
+          aria-label="Notifications"
         >
           <Bell size={20} />
-          <span style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: '#ef4444',
-            border: '1.5px solid #fff'
-          }} />
+          {unreadNotificationsCount > 0 && (
+            <span 
+              className="bell-notification-dot"
+              style={{
+                position: 'absolute',
+                top: '5px',
+                right: '6px',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#ef4444',
+                border: '2px solid #ffffff',
+                boxShadow: '0 0 8px rgba(239, 68, 68, 0.8)',
+                display: 'block'
+              }}
+              title={`${unreadNotificationsCount} unread notification${unreadNotificationsCount > 1 ? 's' : ''}`}
+            />
+          )}
         </button>
       </div>
-
-      {/* Notification Dropdown modal if opened */}
-      {notificationOpen && (
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '16px',
-          padding: '14px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-          fontSize: '13px',
-          color: '#334155'
-        }}>
-          <div style={{ fontWeight: '700', marginBottom: '4px', color: '#15803d' }}>🔔 নোটিফিকেশন</div>
-          <p>আজকের স্পিন এবং দৈনিক বোনাস ক্লেইম করে আরও ১২টি টোকেন জিতে নিন!</p>
-        </div>
-      )}
 
       {/* Balance Card (Using balance-card-bg.png from assets) */}
       <div 

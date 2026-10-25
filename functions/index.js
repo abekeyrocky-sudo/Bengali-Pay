@@ -240,27 +240,27 @@ async function sendWelcome(chatId, user) {
 গেম • টাস্ক • রেফার
 বিকাশ ও নগদে উত্তোলনের সুযোগ!
 
-নিচের Start বাটনে ক্লিক করে শুরু করুন।`;
+নিচের বাটনে ক্লিক করে শুরু করুন।`;
 
   const replyMarkup = {
     inline_keyboard: [
       [
         {
-          text: "Start",
+          text: "অ্যাপ খুলুন",
           web_app: { url: APP_URL },
           style: "success"
         }
       ],
       [
         {
-          text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+          text: "অফিশিয়াল চ্যানেল",
           url: "https://t.me/BengaliPay_bot",
           style: "danger"
         }
       ],
       [
         {
-          text: "সাহায্য ও নিয়ম",
+          text: "নিয়ম ও সাহায্য",
           callback_data: "help_info",
           style: "success"
         }
@@ -348,6 +348,29 @@ export const telegramBot = onRequest(
       const { user, referrerParam } = update;
       const result = await processReferralReward(user, referrerParam);
       res.status(200).json({ ok: true, result });
+      return;
+    }
+
+    // Direct API call from Mini App to verify @BengaliPay channel membership
+    if (update.action === "check_channel_member") {
+      const cleanId = String(update.userId || "").replace("tg_", "").trim();
+      if (!cleanId) {
+        res.status(200).json({ ok: true, isMember: false, reason: "no_user_id" });
+        return;
+      }
+
+      const checkRes = await telegramApi("getChatMember", {
+        chat_id: "@BengaliPay",
+        user_id: cleanId
+      });
+
+      if (checkRes && checkRes.ok && checkRes.result) {
+        const status = checkRes.result.status;
+        const isMember = ["creator", "administrator", "member", "restricted"].includes(status);
+        res.status(200).json({ ok: true, isMember, status });
+      } else {
+        res.status(200).json({ ok: true, isMember: false, error: checkRes?.description || "not_member" });
+      }
       return;
     }
 

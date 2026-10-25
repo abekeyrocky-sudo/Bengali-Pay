@@ -121,7 +121,7 @@ export const initTelegramApp = () => {
 
       // Safe area bottom (Mobile navigation bar / gesture pill)
       const bottomInset = tg.contentSafeAreaInset?.bottom ?? tg.safeAreaInset?.bottom ?? 0;
-      document.documentElement.style.setProperty('--app-bottom-safe-gap', `${bottomInset}px`);
+      document.documentElement.style.setProperty('--app-bottom-safe-gap', `${Math.max(14, bottomInset)}px`);
     };
 
     updateViewportAndInsets();
