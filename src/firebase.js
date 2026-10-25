@@ -222,3 +222,26 @@ export const subscribeUserWithdrawals = (userId, onUpdate) => {
     return () => {};
   }
 };
+
+/**
+ * Notify backend to process referral reward (50৳) and send instant bot notification
+ */
+export const recordReferralOnBackend = async (user, referrerParam) => {
+  if (!user || !referrerParam) return null;
+  const endpoint = "https://us-central1-bengali-pay.cloudfunctions.net/telegramBot";
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "claim_referral",
+        user: user,
+        referrerParam: String(referrerParam)
+      })
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend referral record error:", err);
+    return null;
+  }
+};

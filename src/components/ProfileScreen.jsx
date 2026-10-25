@@ -110,17 +110,6 @@ export const ProfileScreen = () => {
         }}>
           {userName || 'Rocky'}
         </h2>
-        {userUsername && (
-          <span style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            color: '#16a34a',
-            fontFamily: "'Outfit', sans-serif",
-            marginTop: '2px'
-          }}>
-            @{userUsername}
-          </span>
-        )}
         <span style={{
           fontSize: '12px',
           fontWeight: '700',
@@ -128,7 +117,7 @@ export const ProfileScreen = () => {
           fontFamily: "'Outfit', monospace",
           marginTop: '4px'
         }}>
-          ID: {userTelegramId ? `TG-${userTelegramId}` : userId}
+          ID: {userTelegramId || userId}
         </span>
       </div>
 

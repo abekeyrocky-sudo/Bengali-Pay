@@ -22,6 +22,7 @@ export const isTelegramEnvironment = () => {
 export const getTelegramUser = () => {
   const tg = getTelegramWebApp();
   const u = tg?.initDataUnsafe?.user;
+  const startParam = tg?.initDataUnsafe?.start_param || '';
   if (u && (u.id !== undefined && u.id !== null)) {
     const rawId = String(u.id); // Guaranteed string representation of Telegram ID
     const firstName = u.first_name ? String(u.first_name).trim() : '';
@@ -36,10 +37,26 @@ export const getTelegramUser = () => {
       fullName: fullName,
       photoUrl: u.photo_url || '',
       isPremium: Boolean(u.is_premium),
-      languageCode: u.language_code || 'bn'
+      languageCode: u.language_code || 'bn',
+      startParam: String(startParam)
     };
   }
   return null;
+};
+
+/**
+ * Retrieve referral / deep link start_param from Mini App or URL query
+ */
+export const getTelegramStartParam = () => {
+  const tg = getTelegramWebApp();
+  if (tg?.initDataUnsafe?.start_param) {
+    return String(tg.initDataUnsafe.start_param);
+  }
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('startapp') || params.get('start') || '';
+  }
+  return '';
 };
 
 /**
@@ -89,32 +106,57 @@ export const initTelegramApp = () => {
       tg.setBackgroundColor('#ffffff');
     }
 
-    // 7. Calculate and apply safe area top gap for Telegram overlay (Close / Menu pills)
-    const applySafeArea = () => {
-      const topInset = tg.contentSafeAreaInset?.top || tg.safeAreaInset?.top || 0;
+    // 7. Calculate and apply exact viewport height & safe area insets
+    const updateViewportAndInsets = () => {
+      // Calculate exact visible viewport height (locks screen to actual viewable area)
+      const visibleHeight = tg.viewportStableHeight || tg.viewportHeight || window.innerHeight;
+      if (visibleHeight && visibleHeight > 0) {
+        document.documentElement.style.setProperty('--app-viewport-height', `${visibleHeight}px`);
+      }
+
+      // Safe area top (Telegram overlay pills: Close X and Menu ⋮)
+      const topInset = tg.contentSafeAreaInset?.top ?? tg.safeAreaInset?.top ?? 0;
       const topGap = Math.max(56, topInset);
       document.documentElement.style.setProperty('--app-top-safe-gap', `${topGap}px`);
+
+      // Safe area bottom (Mobile navigation bar / gesture pill)
+      const bottomInset = tg.contentSafeAreaInset?.bottom ?? tg.safeAreaInset?.bottom ?? 0;
+      document.documentElement.style.setProperty('--app-bottom-safe-gap', `${bottomInset}px`);
     };
-    applySafeArea();
+
+    updateViewportAndInsets();
+
     if (typeof tg.onEvent === 'function') {
-      tg.onEvent('contentSafeAreaChanged', applySafeArea);
-      tg.onEvent('safeAreaChanged', applySafeArea);
+      tg.onEvent('viewportChanged', updateViewportAndInsets);
+      tg.onEvent('contentSafeAreaChanged', updateViewportAndInsets);
+      tg.onEvent('safeAreaChanged', updateViewportAndInsets);
     }
+    window.addEventListener('resize', updateViewportAndInsets);
+    window.addEventListener('orientationchange', updateViewportAndInsets);
+
+    // Also bind web beforeunload as double protection
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('resize', updateViewportAndInsets);
+      window.removeEventListener('orientationchange', updateViewportAndInsets);
+      if (typeof tg.offEvent === 'function') {
+        tg.offEvent('viewportChanged', updateViewportAndInsets);
+        tg.offEvent('contentSafeAreaChanged', updateViewportAndInsets);
+        tg.offEvent('safeAreaChanged', updateViewportAndInsets);
+      }
+    };
   } catch (err) {
     console.warn("Telegram WebApp initialization notice:", err);
   }
 
-  // Also bind web beforeunload as double protection
-  const handleBeforeUnload = (e) => {
-    e.preventDefault();
-    e.returnValue = '';
-    return '';
-  };
-  window.addEventListener('beforeunload', handleBeforeUnload);
-
-  return () => {
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-  };
+  return () => {};
 };
 
 /**

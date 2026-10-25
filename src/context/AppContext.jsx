@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { sounds } from '../utils/audio';
-import { getUserId, getUserFromFirestore, saveUserToFirestore } from '../firebase';
-import { getTelegramUser } from '../utils/telegram';
+import { getUserId, getUserFromFirestore, saveUserToFirestore, recordReferralOnBackend } from '../firebase';
+import { getTelegramUser, getTelegramStartParam } from '../utils/telegram';
 
 const AppContext = createContext();
 
@@ -87,6 +87,16 @@ export const AppProvider = ({ children }) => {
   const [deviceView, setDeviceView] = useState('frame'); // 'frame' or 'fullscreen'
   const [soundOn, setSoundOn] = useState(true);
 
+  const [referralCount, setReferralCount] = useState(() => {
+    const saved = localStorage.getItem('bp_referral_count');
+    return saved !== null ? parseInt(saved, 10) : 0;
+  });
+
+  const [referralBonus, setReferralBonus] = useState(() => {
+    const saved = localStorage.getItem('bp_referral_bonus');
+    return saved !== null ? parseFloat(saved) : 0;
+  });
+
   // Daily check-in state
   const [dailyClaimed, setDailyClaimed] = useState(false);
 
@@ -101,6 +111,28 @@ export const AppProvider = ({ children }) => {
     { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳ Token', amount: 10, type: 'token', action: 'Invite', done: false },
     { id: 'survey', title: 'Complete Survey', reward: '+3 ৳ Token', amount: 3, type: 'token', action: 'Start', done: false }
   ]);
+
+  // Process incoming referral if opened with ?startapp=<refParam> or Telegram deep link
+  useEffect(() => {
+    const refParam = getTelegramStartParam();
+    const alreadyClaimed = localStorage.getItem('bp_referral_claimed');
+    if (refParam && !alreadyClaimed) {
+      const currentUser = tgSession || {
+        id: userTelegramId || userId,
+        first_name: userName || 'New Friend'
+      };
+      const curId = String(currentUser.id || userTelegramId || userId);
+      if (curId && curId !== String(refParam) && !curId.includes(String(refParam))) {
+        recordReferralOnBackend(currentUser, refParam)
+          .then((res) => {
+            if (res && res.ok) {
+              localStorage.setItem('bp_referral_claimed', 'true');
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [tgSession, userTelegramId, userId, userName]);
 
   // Fetch remote user data once on mount (Safe single fetch, no infinite loop)
   useEffect(() => {
@@ -118,6 +150,14 @@ export const AppProvider = ({ children }) => {
           if (remoteData.userXp !== undefined) setUserXp(remoteData.userXp);
           if (remoteData.phone !== undefined) setUserPhone(remoteData.phone);
           if (remoteData.dailyClaimed !== undefined) setDailyClaimed(remoteData.dailyClaimed);
+          if (remoteData.referralCount !== undefined) {
+            setReferralCount(remoteData.referralCount);
+            localStorage.setItem('bp_referral_count', String(remoteData.referralCount));
+          }
+          if (remoteData.referralBonus !== undefined) {
+            setReferralBonus(remoteData.referralBonus);
+            localStorage.setItem('bp_referral_bonus', String(remoteData.referralBonus));
+          }
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
           if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
 
@@ -314,7 +354,11 @@ export const AppProvider = ({ children }) => {
         closeModal,
         notifySuccess,
         notifyWarn,
-        notifyFail
+        notifyFail,
+        referralCount,
+        setReferralCount,
+        referralBonus,
+        setReferralBonus
       }}
     >
       {children}

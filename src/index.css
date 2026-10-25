@@ -15,6 +15,8 @@
   --card-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.07), 0 2px 6px -2px rgba(0, 0, 0, 0.05);
   --card-hover-shadow: 0 10px 25px -3px rgba(22, 163, 74, 0.15);
   --app-top-safe-gap: max(56px, var(--tg-content-safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px), env(safe-area-inset-top, 0px));
+  --app-bottom-safe-gap: max(0px, var(--tg-content-safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px));
+  --app-viewport-height: 100vh;
   --screen-bg: #f8fafc;
 }
 
@@ -24,6 +26,15 @@
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  height: var(--app-viewport-height, 100vh);
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .material-symbols-rounded {
@@ -47,8 +58,6 @@ body {
   font-family: 'Outfit', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: #0f172a;
   color: var(--text-dark);
-  min-height: 100vh;
-  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -73,8 +82,8 @@ body {
 /* App Desktop Shell - Real Web App / Telegram Mini App (TMA) */
 .app-viewport-container {
   width: 100vw;
-  height: 100vh;
-  height: var(--tg-viewport-stable-height, 100dvh);
+  height: 100%;
+  height: var(--app-viewport-height, 100%);
   display: flex;
   justify-content: center;
   background: #0f172a;
@@ -90,7 +99,7 @@ body {
   width: 100%;
   max-width: 460px;
   height: 100%;
-  height: var(--tg-viewport-stable-height, 100dvh);
+  height: var(--app-viewport-height, 100%);
   background: var(--screen-bg, #f8fafc);
   display: flex;
   flex-direction: column;
@@ -118,7 +127,7 @@ body {
   flex-direction: column;
   background: var(--screen-bg, #f8fafc);
   padding-top: var(--app-top-safe-gap, 56px);
-  padding-bottom: 74px; /* Space for bottom nav */
+  padding-bottom: calc(66px + var(--app-bottom-safe-gap, 0px)); /* Space for bottom nav */
 }
 
 /* Splash Screen Body override */
@@ -137,16 +146,17 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 68px;
-  background: rgba(255, 255, 255, 0.95);
+  min-height: 58px;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(16px);
   border-top: 1px solid rgba(22, 163, 74, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 10px;
+  padding: 4px 6px calc(4px + var(--app-bottom-safe-gap, 0px));
   z-index: 95;
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
 }
 
 .nav-item-btn {
@@ -156,15 +166,23 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   cursor: pointer;
   color: #94a3b8;
-  font-family: 'Noto Serif Bengali', serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.1;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 6px 12px;
+  padding: 3px 8px;
   border-radius: 12px;
+}
+
+.nav-item-btn span {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .nav-item-btn:hover {
@@ -178,13 +196,13 @@ body {
 .nav-item-btn.active .nav-icon-wrapper {
   color: #fff;
   background: linear-gradient(135deg, #16a34a, #15803d);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
 }
 
 .nav-icon-wrapper {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 10px;
   display: flex;
   align-items: center;

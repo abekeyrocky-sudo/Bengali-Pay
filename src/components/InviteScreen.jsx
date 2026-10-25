@@ -6,35 +6,40 @@ import {
   ArrowLeft, 
   Copy, 
   Check, 
-  Share2, 
+  Link2, 
+  Send, 
   Users, 
-  Gift, 
-  Trophy, 
-  Sparkles,
-  Send,
-  HelpCircle,
-  ExternalLink
+  User, 
+  Star, 
+  ChevronRight 
 } from 'lucide-react';
-import cigaretteIcon from '../assets/cigarette-icon.png';
+import inviteHeroBanner from '../assets/invite-hero-banner.png';
+import inviteBottomBanner from '../assets/invite-bottom-banner.png';
+import inviteTeamArt from '../assets/invite-team-art.png';
+import inviteGiftArt from '../assets/invite-gift-art.png';
 
 export const InviteScreen = () => {
-  const { userId, userTelegramId, tokens, navigateTo, notifySuccess } = useApp();
+  const { userId, userTelegramId, tokens, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess } = useApp();
   const [copied, setCopied] = useState(false);
 
-  // Generate Referral Link and Code from Telegram string ID or User ID
-  const cleanCode = (userTelegramId || userId || 'user123').replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase();
-  const referralLink = `https://t.me/BengaliPay_bot?start=ref_${cleanCode}`;
-  const shareMessage = `🔥 Bengali Pay তে প্রতিদিন কামলা দিয়ে, গেম খেলে আর টাস্ক করে বিকাশ ও নগদে টাকা আয় করুন! আমার ইনভাইট লিঙ্কে জয়েন করলেই পাবেন ফ্রি বোনাস টোকেন! ৳`;
+  const displayBonus = referralBonus || (referralCount * 50);
 
-  // Copy referral link to clipboard
+  // Generate Referral Code and Direct Mini App Link (https://t.me/BengaliPay_bot/App)
+  const referralCode = userTelegramId 
+    ? String(userTelegramId) 
+    : (userId || 'ROCKY123').replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase();
+  const referralLink = `https://t.me/BengaliPay_bot/App?startapp=${referralCode}`;
+  const shareMessage = `🔥 Bengali Pay তে বন্ধুদের আমন্ত্রণ জানিয়ে প্রতি রেফারে ৫০৳ বোনাস আয় করুন! বিকাশ ও নগদে সরাসরি উত্তোলনের সুযোগ। জয়েন করতে ক্লিক করুন: ৳`;
+
+  // Copy referral link
   const handleCopyLink = () => {
     sounds.playClick();
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(referralLink);
     }
     setCopied(true);
-    notifySuccess('লিঙ্ক কপি হয়েছে!', 'রেফারেল লিঙ্ক কপি করা হয়েছে। বন্ধুদের পাঠিয়ে বোনাস জিতুন!');
     setTimeout(() => setCopied(false), 2500);
+    notifySuccess('লিঙ্ক কপি হয়েছে!', 'রেফারেল লিঙ্ক কপি করা হয়েছে। বন্ধুদের পাঠিয়ে বোনাস জিতুন!');
   };
 
   // Share directly to Telegram
@@ -48,7 +53,6 @@ export const InviteScreen = () => {
 
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareMessage)}`;
     
-    // Check if running in Telegram WebApp
     const tg = window.Telegram?.WebApp;
     if (tg && typeof tg.openTelegramLink === 'function') {
       tg.openTelegramLink(shareUrl);
@@ -59,42 +63,42 @@ export const InviteScreen = () => {
 
   return (
     <div style={{
-      padding: '16px 18px 24px',
+      padding: '12px 14px 24px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '16px',
+      gap: '12px',
       background: '#f8fafc',
       minHeight: '100%',
       boxSizing: 'border-box'
     }}>
-      {/* Top Header Bar */}
+      {/* 1. Top Header Bar */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: '6px'
+        padding: '2px 0 4px'
       }}>
         {/* Back Button & Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button 
             onClick={() => navigateTo('home')}
             style={{
               background: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '50%',
               width: '38px',
               height: '38px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+              boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
             }}
           >
-            <ArrowLeft size={19} color="#334155" />
+            <ArrowLeft size={18} color="#1e293b" />
           </button>
           <h2 style={{
-            fontSize: '20px',
+            fontSize: '18px',
             fontWeight: '800',
             color: '#0f172a',
             fontFamily: "'Outfit', sans-serif"
@@ -103,170 +107,286 @@ export const InviteScreen = () => {
           </h2>
         </div>
 
-        {/* Token Balance Counter Pill Badge */}
+        {/* Token Balance Pill Badge */}
         <div style={{
-          background: 'linear-gradient(135deg, #fffdf5 0%, #fef3c7 100%)',
+          background: 'linear-gradient(135deg, #fffdf5 0%, #fef9c3 100%)',
           border: '1.5px solid #fde047',
-          borderRadius: '20px',
-          padding: '4px 14px 4px 6px',
+          borderRadius: '24px',
+          padding: '4px 12px 4px 6px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 2px 10px rgba(234, 179, 8, 0.16)'
+          gap: '7px',
+          boxShadow: '0 2px 8px rgba(234, 179, 8, 0.12)'
         }}>
-          <img 
-            src={cigaretteIcon} 
-            alt="Token" 
-            style={{
-              width: '24px',
-              height: '24px',
-              objectFit: 'contain',
-              display: 'block'
-            }}
-          />
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-            <span style={{
-              fontSize: '15px',
-              fontWeight: '900',
-              color: '#854d0e',
-              fontFamily: "'Outfit', sans-serif",
-              lineHeight: '1'
-            }}>
-              {tokens}
-            </span>
-            <span style={{
-              fontSize: '10px',
-              fontWeight: '700',
-              color: '#a16207',
-              letterSpacing: '0.2px'
-            }}>
-              Tokens
-            </span>
+          {/* Green circular coin badge with ৳ */}
+          <div style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            border: '1.5px solid #86efac',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            fontSize: '13px',
+            fontWeight: '900',
+            boxShadow: '0 2px 5px rgba(22, 163, 74, 0.3)'
+          }}>
+            ৳
           </div>
+          <span style={{
+            fontSize: '14px',
+            fontWeight: '800',
+            color: '#854d0e',
+            fontFamily: "'Outfit', sans-serif"
+          }}>
+            {tokens} <span style={{ fontSize: '12px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+          </span>
         </div>
       </div>
 
-      {/* Hero Banner Card: Vibrant Blue/Sky Gradient */}
+      {/* 2. Top Hero Banner Card (1600x1000 Ratio) */}
       <div style={{
-        background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%)',
-        borderRadius: '24px',
-        padding: '22px 20px',
-        color: '#ffffff',
-        position: 'relative',
+        width: '100%',
+        aspectRatio: '1600 / 1000',
+        borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: '0 10px 25px -4px rgba(2, 132, 199, 0.35)',
-        display: 'flex',
-        flexDirection: 'column',
+        boxShadow: '0 4px 15px rgba(22, 163, 74, 0.1)',
+        border: '1.5px solid #dcfce7',
+        background: '#ffffff',
+        position: 'relative'
+      }}>
+        <img 
+          src={inviteHeroBanner} 
+          alt="Invite Friends Banner" 
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block'
+          }} 
+        />
+      </div>
+
+
+
+      {/* 4. 2 Stats Cards (Grid 1fr 1fr) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
         gap: '12px'
       }}>
-        {/* Background glow circle */}
+        {/* Left: মোট রেফারেল */}
         <div style={{
-          position: 'absolute',
-          top: '-20px',
-          right: '-20px',
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
-          pointerEvents: 'none'
-        }} />
-
-        {/* Top Tag */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: 'rgba(255, 255, 255, 0.18)',
-          backdropFilter: 'blur(10px)',
-          padding: '4px 12px',
-          borderRadius: '20px',
-          width: 'fit-content',
-          fontSize: '11px',
-          fontWeight: '700',
-          letterSpacing: '0.3px',
-          border: '1px solid rgba(255,255,255,0.25)'
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+          border: '1.5px solid #dcfce7',
+          borderRadius: '18px',
+          padding: '14px',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '94px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
         }}>
-          <Sparkles size={13} color="#fde047" />
-          <span>রেফারেল প্রোগ্রাম</span>
+          {/* User Group Icon Circle */}
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: '#e0f2fe',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#0284c7'
+          }}>
+            <Users size={16} />
+          </div>
+
+          <div>
+            <span style={{
+              fontSize: '11px',
+              color: '#64748b',
+              fontWeight: '700',
+              fontFamily: "'Noto Serif Bengali', serif"
+            }}>
+              মোট রেফারেল
+            </span>
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '4px',
+              marginTop: '2px'
+            }}>
+              <span style={{
+                fontSize: '22px',
+                fontWeight: '900',
+                color: '#0f172a',
+                fontFamily: "'Outfit', sans-serif"
+              }}>
+                {referralCount}
+              </span>
+              <span style={{
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: '700',
+                fontFamily: "'Noto Serif Bengali', serif"
+              }}>
+                জন বন্ধু
+              </span>
+            </div>
+          </div>
+
+          {/* Right Team Illustration */}
+          <img 
+            src={inviteTeamArt} 
+            alt="Friends Illustration" 
+            style={{
+              position: 'absolute',
+              right: '4px',
+              bottom: '4px',
+              width: '54px',
+              height: 'auto',
+              pointerEvents: 'none'
+            }} 
+          />
         </div>
 
-        {/* Big Reward Title */}
-        <div>
-          <h3 style={{
-            fontSize: '22px',
-            fontWeight: '900',
-            lineHeight: '1.25',
-            fontFamily: "'Outfit', sans-serif",
-            textShadow: '0 2px 4px rgba(0,0,0,0.15)'
+        {/* Right: পাওয়া বোনাস */}
+        <div style={{
+          background: 'linear-gradient(135deg, #fefce8 0%, #ffffff 100%)',
+          border: '1.5px solid #fef08a',
+          borderRadius: '18px',
+          padding: '14px',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '94px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+        }}>
+          {/* Gold Coin Icon Circle */}
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: '#fef3c7',
+            border: '1.5px solid #fde047',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#b45309',
+            fontSize: '14px',
+            fontWeight: '900'
           }}>
-            প্রতি রেফারে পান <span style={{ color: '#facc15' }}>+১০ ৳ টোকেন!</span>
-          </h3>
-          <p style={{
-            fontSize: '13px',
-            color: '#e0f2fe',
-            marginTop: '6px',
-            lineHeight: '1.4',
-            fontWeight: '500'
-          }}>
-            আপনার বন্ধুদের ইনভাইট করুন। তারা জয়েন করলেই সাথে সাথে আপনার একাউন্টে বোনাস জমা হবে!
-          </p>
+            ৳
+          </div>
+
+          <div>
+            <span style={{
+              fontSize: '11px',
+              color: '#64748b',
+              fontWeight: '700',
+              fontFamily: "'Noto Serif Bengali', serif"
+            }}>
+              পাওয়া বোনাস
+            </span>
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '4px',
+              marginTop: '2px'
+            }}>
+              <span style={{
+                fontSize: '20px',
+                fontWeight: '900',
+                color: '#16a34a',
+                fontFamily: "'Outfit', sans-serif"
+              }}>
+                + {displayBonus}
+              </span>
+              <span style={{
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: '700',
+                fontFamily: "'Noto Serif Bengali', serif"
+              }}>
+                টোকেন
+              </span>
+            </div>
+          </div>
+
+          {/* Right Gift Illustration */}
+          <img 
+            src={inviteGiftArt} 
+            alt="Gift Illustration" 
+            style={{
+              position: 'absolute',
+              right: '4px',
+              bottom: '4px',
+              width: '52px',
+              height: 'auto',
+              pointerEvents: 'none'
+            }} 
+          />
         </div>
       </div>
 
-      {/* Referral Link & Share Section */}
+      {/* 5. Share Card (আপনার রেফারেল লিংক শেয়ার করুন) */}
       <div style={{
         background: '#ffffff',
-        borderRadius: '22px',
-        padding: '18px',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+        borderRadius: '20px',
+        padding: '14px',
+        border: '1.5px solid #e0f2fe',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '14px'
+        gap: '10px'
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: '#e0f2fe',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#0284c7'
+          }}>
+            <Link2 size={14} />
+          </div>
           <span style={{
             fontSize: '13px',
-            fontWeight: '700',
-            color: '#334155'
+            fontWeight: '800',
+            color: '#0f172a',
+            fontFamily: "'Noto Serif Bengali', serif"
           }}>
-            আপনার ইনভাইট লিঙ্ক:
-          </span>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            background: '#f1f5f9',
-            color: '#0284c7',
-            padding: '3px 8px',
-            borderRadius: '8px'
-          }}>
-            কোড: {cleanCode}
+            আপনার রেফারেল লিংক শেয়ার করুন
           </span>
         </div>
 
-        {/* Link Box with Copy Button */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          background: '#f8fafc',
-          border: '1.5px dashed #cbd5e1',
-          borderRadius: '14px',
-          padding: '8px 10px',
           gap: '8px'
         }}>
           <div style={{
             flex: 1,
+            background: '#f8fafc',
+            border: '1.5px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '9px 12px',
+            fontSize: '11px',
+            fontWeight: '600',
+            color: '#475569',
+            whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontSize: '12px',
-            color: '#475569',
-            fontFamily: 'monospace',
-            fontWeight: '600'
+            fontFamily: "'Outfit', monospace"
           }}>
             {referralLink}
           </div>
@@ -274,294 +394,211 @@ export const InviteScreen = () => {
           <button
             onClick={handleCopyLink}
             style={{
-              background: copied ? '#22c55e' : '#0284c7',
+              background: copied ? '#15803d' : '#16a34a',
               color: '#ffffff',
               border: 'none',
-              borderRadius: '10px',
-              padding: '8px 14px',
+              borderRadius: '12px',
+              padding: '9px 14px',
               fontSize: '12px',
-              fontWeight: '700',
+              fontWeight: '800',
+              fontFamily: "'Noto Serif Bengali', serif",
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               cursor: 'pointer',
-              transition: 'background 0.2s',
-              flexShrink: 0
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(22, 163, 74, 0.25)',
+              transition: 'all 0.2s ease'
             }}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
-            <span>{copied ? 'কপি হয়েছে!' : 'কপি করুন'}</span>
+            <span>{copied ? 'কপি হয়েছে' : 'কপি করুন'}</span>
           </button>
         </div>
 
-        {/* Big Telegram Share Button */}
+        {/* Big Vibrant Green Telegram Share Button */}
         <button
           onClick={handleTelegramShare}
           style={{
+            width: '100%',
             background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
             color: '#ffffff',
             border: 'none',
-            borderRadius: '16px',
-            padding: '14px',
-            fontSize: '15px',
+            borderRadius: '14px',
+            padding: '11px 16px',
+            fontSize: '14px',
             fontWeight: '800',
+            fontFamily: "'Noto Serif Bengali', serif",
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '10px',
+            gap: '8px',
             cursor: 'pointer',
-            boxShadow: '0 6px 18px rgba(34, 197, 94, 0.35)',
-            transition: 'transform 0.15s ease'
+            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.3)',
+            transition: 'all 0.2s ease',
+            marginTop: '2px'
           }}
-          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
-          <Send size={18} />
+          <Send size={16} fill="#ffffff" />
           <span>টেলিগ্রামে বন্ধুদের পাঠান</span>
         </button>
       </div>
 
-      {/* Referral Stats Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '12px'
-      }}>
-        {/* Card 1: Total Friends */}
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '18px',
-          padding: '16px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px'
-        }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: '#e0f2fe',
-            color: '#0284c7',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Users size={18} />
-          </div>
-          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-            মোট আমন্ত্রিত বন্ধু
-          </span>
-          <span style={{ fontSize: '20px', fontWeight: '900', color: '#0f172a', fontFamily: "'Outfit', sans-serif" }}>
-            ০ জন
-          </span>
-        </div>
-
-        {/* Card 2: Bonus Earned */}
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '18px',
-          padding: '16px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px'
-        }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            background: '#fef3c7',
-            color: '#d97706',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Gift size={18} />
-          </div>
-          <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-            অর্জিত বোনাস
-          </span>
-          <span style={{ fontSize: '20px', fontWeight: '900', color: '#16a34a', fontFamily: "'Outfit', sans-serif" }}>
-            +০ টোকেন
-          </span>
-        </div>
-      </div>
-
-      {/* Milestone Rewards Section */}
-      <div style={{
-        background: '#ffffff',
-        borderRadius: '22px',
-        padding: '18px',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Trophy size={18} color="#d97706" />
-          <h4 style={{
-            fontSize: '14px',
-            fontWeight: '800',
-            color: '#0f172a',
-            fontFamily: "'Outfit', sans-serif"
-          }}>
-            ইনভাইট মাইলস্টোন রিওয়ার্ড
-          </h4>
-        </div>
-
-        {/* Milestone Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Item 1 */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#f8fafc',
-            borderRadius: '14px',
-            padding: '12px 14px',
-            border: '1px solid #edf2f7'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: '#dcfce7',
-                color: '#16a34a',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '12px'
-              }}>
-                ৩
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>৩ জন বন্ধু</div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>ইনভাইট কমপ্লিট করুন</div>
-              </div>
-            </div>
-            <span style={{
-              background: '#dcfce7',
-              color: '#15803d',
-              padding: '4px 10px',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: '800'
-            }}>
-              +৩০ ৳ টোকেন
-            </span>
-          </div>
-
-          {/* Item 2 */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#f8fafc',
-            borderRadius: '14px',
-            padding: '12px 14px',
-            border: '1px solid #edf2f7'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: '#e0f2fe',
-                color: '#0284c7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '12px'
-              }}>
-                ১০
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>১০ জন বন্ধু</div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>স্পেশাল রিওয়ার্ড</div>
-              </div>
-            </div>
-            <span style={{
-              background: '#e0f2fe',
-              color: '#0369a1',
-              padding: '4px 10px',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: '800'
-            }}>
-              +১০০ ৳ টোকেন
-            </span>
-          </div>
-
-          {/* Item 3 */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#f8fafc',
-            borderRadius: '14px',
-            padding: '12px 14px',
-            border: '1px solid #edf2f7'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: '#fef3c7',
-                color: '#d97706',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '12px'
-              }}>
-                ২৫
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>২৫ জন বন্ধু</div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>ভিআইপি বোনাস</div>
-              </div>
-            </div>
-            <span style={{
-              background: '#fef3c7',
-              color: '#b45309',
-              padding: '4px 10px',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: '800'
-            }}>
-              +৩০০ ৳ টোকেন
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* How it works info */}
+      {/* 6. Referral Milestone Rewards Card */}
       <div style={{
         background: '#ffffff',
         borderRadius: '20px',
-        padding: '16px',
-        border: '1px solid #e2e8f0',
+        padding: '14px',
+        border: '1.5px solid #e0f2fe',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px'
+        gap: '10px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#475569' }}>
-          <HelpCircle size={16} />
-          <span style={{ fontSize: '13px', fontWeight: '700' }}>রেফারেল নিয়মাবলী:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '16px' }}>🏆</span>
+          <span style={{
+            fontSize: '13px',
+            fontWeight: '800',
+            color: '#0f172a',
+            fontFamily: "'Noto Serif Bengali', serif"
+          }}>
+            রেফারেল মিলস্টোন রিওয়ার্ড
+          </span>
         </div>
-        <p style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.5' }}>
-          ১. আপনার রেফারেল লিঙ্ক কপি করে বন্ধুদের শেয়ার করুন।<br />
-          ২. বন্ধু লিঙ্কে ক্লিক করে টেলিগ্রাম বটের মাধ্যমে মিনি অ্যাপ ওপেন করলেই টোকেন আপনার অ্যাকাউন্টে জমা হবে।<br />
-          ৩. অর্জিত টোকেন দিয়ে সরাসরি বিকাশ ও নগদ অ্যাকাউন্টে উইথড্র রিকোয়েস্ট করতে পারবেন।
-        </p>
+
+        {/* 3 Step Tiers */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '6px'
+        }}>
+          {/* Tier 1: 5 Friends */}
+          <div style={{
+            flex: 1,
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: '14px',
+            padding: '8px 6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: '#22c55e',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              flexShrink: 0
+            }}>
+              <User size={13} />
+            </div>
+            <div style={{ lineHeight: 1.15 }}>
+              <div style={{ fontSize: '10px', fontWeight: '800', color: '#166534', fontFamily: "'Noto Serif Bengali', serif" }}>
+                5 জন বন্ধু
+              </div>
+              <div style={{ fontSize: '11px', fontWeight: '900', color: '#16a34a', fontFamily: "'Outfit', sans-serif" }}>
+                +20 <span style={{ fontSize: '9px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+              </div>
+            </div>
+          </div>
+
+          <ChevronRight size={14} color="#94a3b8" />
+
+          {/* Tier 2: 10 Friends */}
+          <div style={{
+            flex: 1,
+            background: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            borderRadius: '14px',
+            padding: '8px 6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: '#0284c7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              flexShrink: 0
+            }}>
+              <Users size={13} />
+            </div>
+            <div style={{ lineHeight: 1.15 }}>
+              <div style={{ fontSize: '10px', fontWeight: '800', color: '#075985', fontFamily: "'Noto Serif Bengali', serif" }}>
+                10 জন বন্ধু
+              </div>
+              <div style={{ fontSize: '11px', fontWeight: '900', color: '#0284c7', fontFamily: "'Outfit', sans-serif" }}>
+                +50 <span style={{ fontSize: '9px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+              </div>
+            </div>
+          </div>
+
+          <ChevronRight size={14} color="#94a3b8" />
+
+          {/* Tier 3: 20 Friends */}
+          <div style={{
+            flex: 1,
+            background: '#fefce8',
+            border: '1px solid #fef08a',
+            borderRadius: '14px',
+            padding: '8px 6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: '#eab308',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff',
+              flexShrink: 0
+            }}>
+              <Star size={13} fill="#ffffff" />
+            </div>
+            <div style={{ lineHeight: 1.15 }}>
+              <div style={{ fontSize: '10px', fontWeight: '800', color: '#854d0e', fontFamily: "'Noto Serif Bengali', serif" }}>
+                20 জন বন্ধু
+              </div>
+              <div style={{ fontSize: '11px', fontWeight: '900', color: '#ca8a04', fontFamily: "'Outfit', sans-serif" }}>
+                +100 <span style={{ fontSize: '9px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 7. Bottom Mini Banner Card */}
+      <div style={{
+        borderRadius: '16px',
+        overflow: 'hidden',
+        border: '1.5px solid #dcfce7',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+        background: '#ffffff'
+      }}>
+        <img 
+          src={inviteBottomBanner} 
+          alt="বেশি বন্ধু আনুন, বেশি আয় করুন" 
+          style={{
+            width: '100%',
+            height: 'auto',
+            display: 'block'
+          }} 
+        />
       </div>
     </div>
   );
