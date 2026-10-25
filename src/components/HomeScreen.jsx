@@ -280,9 +280,8 @@ export const HomeScreen = () => {
             borderRadius: '18px',
             padding: '14px 6px',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: 'center',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease'
@@ -291,27 +290,18 @@ export const HomeScreen = () => {
           onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '14px',
+            width: '46px',
+            height: '46px',
+            borderRadius: '15px',
             background: 'linear-gradient(135deg, #ef4444, #dc2626)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            boxShadow: '0 4px 10px rgba(239, 68, 68, 0.3)'
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
           }}>
-            <Tv size={22} />
+            <Tv size={24} />
           </div>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            color: '#334155',
-            textAlign: 'center',
-            lineHeight: '1.2'
-          }}>
-            Watch<br />Ads
-          </span>
         </button>
 
         {/* 2. Daily Task */}
@@ -323,9 +313,8 @@ export const HomeScreen = () => {
             borderRadius: '18px',
             padding: '14px 6px',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: 'center',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease'
@@ -334,27 +323,18 @@ export const HomeScreen = () => {
           onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '14px',
+            width: '46px',
+            height: '46px',
+            borderRadius: '15px',
             background: 'linear-gradient(135deg, #22c55e, #16a34a)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            boxShadow: '0 4px 10px rgba(34, 197, 94, 0.3)'
+            boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
           }}>
-            <CalendarCheck size={22} />
+            <CalendarCheck size={24} />
           </div>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            color: '#334155',
-            textAlign: 'center',
-            lineHeight: '1.2'
-          }}>
-            Daily<br />Task
-          </span>
         </button>
 
         {/* 3. Games */}
@@ -366,9 +346,8 @@ export const HomeScreen = () => {
             borderRadius: '18px',
             padding: '14px 6px',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: 'center',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease'
@@ -377,27 +356,18 @@ export const HomeScreen = () => {
           onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '14px',
+            width: '46px',
+            height: '46px',
+            borderRadius: '15px',
             background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            boxShadow: '0 4px 10px rgba(139, 92, 246, 0.3)'
+            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
           }}>
-            <Gamepad2 size={22} />
+            <Gamepad2 size={24} />
           </div>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            color: '#334155',
-            textAlign: 'center',
-            lineHeight: '1.2'
-          }}>
-            Games
-          </span>
         </button>
 
         {/* 4. Invite Friends */}
@@ -405,13 +375,12 @@ export const HomeScreen = () => {
           onClick={() => navigateTo('profile')}
           style={{
             background: '#ffffff',
-            border: '1px solid #fef3c7',
+            border: '1px solid #e0f2fe',
             borderRadius: '18px',
             padding: '14px 6px',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            gap: '8px',
+            justifyContent: 'center',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
             transition: 'transform 0.15s ease'
@@ -420,27 +389,18 @@ export const HomeScreen = () => {
           onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '14px',
+            width: '46px',
+            height: '46px',
+            borderRadius: '15px',
             background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            boxShadow: '0 4px 10px rgba(14, 165, 233, 0.3)'
+            boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
           }}>
-            <UserPlus size={22} />
+            <UserPlus size={24} />
           </div>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            color: '#334155',
-            textAlign: 'center',
-            lineHeight: '1.2'
-          }}>
-            Invite<br />Friends
-          </span>
         </button>
       </div>
 
