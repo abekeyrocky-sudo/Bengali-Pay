@@ -179,24 +179,45 @@ async function processReferralReward(newUser, referrerParam) {
       createdAt: FieldValue.serverTimestamp()
     });
 
-    // 7. Send Telegram Bot Notification to Referrer
+    // 7. Send Telegram Bot Photo Notification to Referrer (Short & Clean Vibe)
     const newTotalCount = ((referrerData?.referralCount || 0) + 1);
-    const notifyMessage = 
-`🎉 <b>অভিনন্দন! নতুন রেফারেল সফল হয়েছে!</b>
+    const notifyCaption = 
+`🎉 <b>রেফারেল বোনাস যোগ হয়েছে!</b>
 
-👤 <b>${newUserName}</b> আপনার রেফারেল লিংক দিয়ে Bengali Pay-তে জয়েন করেছেন।
+💰 <b>+৫০৳</b> রিওয়ার্ড পেয়েছেন
+👤 বন্ধু: <b>${newUserName}</b>
+👥 মোট রেফারেল: <b>${newTotalCount}</b> জন`;
 
-💰 আপনার একাউন্টে <b>+৫০৳</b> রেফারেল বোনাস জমা হয়েছে!
-👥 আপনার মোট সফল রেফারেল: <b>${newTotalCount}</b> জন।
-
-কামলা দিন, টোকেন কামিয়ে বিকাশ ও নগদে ক্যাশআউট করুন! ৳`;
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          {
+            text: "🚀 অ্যাপে ব্যালেন্স দেখুন",
+            web_app: { url: APP_URL }
+          }
+        ]
+      ]
+    };
 
     if (referrerTgId && /^\d+$/.test(referrerTgId)) {
-      const sendRes = await telegramApi("sendMessage", {
+      const photoUrl = `${APP_URL}invite-notification-imag.jpg`;
+      let sendRes = await telegramApi("sendPhoto", {
         chat_id: referrerTgId,
-        text: notifyMessage,
-        parse_mode: "HTML"
+        photo: photoUrl,
+        caption: notifyCaption,
+        parse_mode: "HTML",
+        reply_markup: replyMarkup
       });
+
+      // Graceful fallback to text message if photo delivery fails
+      if (!sendRes || !sendRes.ok) {
+        sendRes = await telegramApi("sendMessage", {
+          chat_id: referrerTgId,
+          text: notifyCaption,
+          parse_mode: "HTML",
+          reply_markup: replyMarkup
+        });
+      }
       logger.info(`Referral notification sent to referrer ${referrerTgId}:`, sendRes?.ok);
     }
 
