@@ -50,12 +50,14 @@ if (typeof window !== "undefined") {
 
 /**
  * Get or create unique user ID for Telegram or Web session
+ * Guarantees Telegram ID is converted and handled strictly as a string
  */
 export const getUserId = () => {
   try {
     // 1. Check Telegram WebApp user ID
-    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-      return `tg_${window.Telegram.WebApp.initDataUnsafe.user.id}`;
+    const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    if (tgId !== undefined && tgId !== null) {
+      return `tg_${String(tgId)}`;
     }
   } catch (e) {
     // Ignore error
@@ -68,6 +70,19 @@ export const getUserId = () => {
     localStorage.setItem("bp_uid", stored);
   }
   return stored;
+};
+
+/**
+ * Get pure Telegram numeric ID as a string, if available
+ */
+export const getRawTelegramId = () => {
+  try {
+    const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    if (tgId !== undefined && tgId !== null) {
+      return String(tgId);
+    }
+  } catch (e) {}
+  return localStorage.getItem("bp_tg_id") || "";
 };
 
 // Flag to prevent console error spam if Firestore daily quota is hit

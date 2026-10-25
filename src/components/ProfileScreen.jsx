@@ -16,6 +16,11 @@ import {
 
 export const ProfileScreen = () => {
   const { 
+    userId,
+    userTelegramId,
+    userName,
+    userUsername,
+    userPhoto,
     userLevel, 
     userXp, 
     navigateTo, 
@@ -86,9 +91,13 @@ export const ProfileScreen = () => {
           background: '#fff'
         }}>
           <img 
-            src="/assets/mascot_boy.jpg" 
-            alt="Rocky Avatar" 
+            src={userPhoto || "/assets/mascot_boy.jpg"} 
+            alt={userName || "User Avatar"} 
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/assets/mascot_boy.jpg";
+            }}
           />
         </div>
 
@@ -99,15 +108,27 @@ export const ProfileScreen = () => {
           marginTop: '10px',
           fontFamily: "'Outfit', sans-serif"
         }}>
-          Rocky
+          {userName || 'Rocky'}
         </h2>
+        {userUsername && (
+          <span style={{
+            fontSize: '13px',
+            fontWeight: '600',
+            color: '#16a34a',
+            fontFamily: "'Outfit', sans-serif",
+            marginTop: '2px'
+          }}>
+            @{userUsername}
+          </span>
+        )}
         <span style={{
           fontSize: '12px',
           fontWeight: '700',
           color: '#64748b',
-          fontFamily: "'Outfit', monospace"
+          fontFamily: "'Outfit', monospace",
+          marginTop: '4px'
         }}>
-          ID: BP123456
+          ID: {userTelegramId ? `TG-${userTelegramId}` : userId}
         </span>
       </div>
 

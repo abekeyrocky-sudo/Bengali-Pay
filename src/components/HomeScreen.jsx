@@ -20,6 +20,9 @@ export const HomeScreen = () => {
   const { 
     balance, 
     tokens, 
+    userName,
+    userFirstName,
+    userPhoto,
     navigateTo, 
     earnReward,
     dailyClaimed,
@@ -73,12 +76,17 @@ export const HomeScreen = () => {
             borderRadius: '50%',
             overflow: 'hidden',
             border: '2px solid #22c55e',
-            boxShadow: '0 4px 10px rgba(34, 197, 94, 0.25)'
+            boxShadow: '0 4px 10px rgba(34, 197, 94, 0.25)',
+            background: '#ffffff'
           }}>
             <img 
-              src="/assets/mascot_boy.jpg" 
-              alt="Rocky Avatar" 
+              src={userPhoto || "/assets/mascot_boy.jpg"} 
+              alt={userName || "User Avatar"} 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "/assets/mascot_boy.jpg";
+              }}
             />
           </div>
           <div>
@@ -93,7 +101,7 @@ export const HomeScreen = () => {
                 color: '#0f172a',
                 fontFamily: "'Outfit', sans-serif"
               }}>
-                Hi, Rocky
+                Hi, {userFirstName || userName || 'Rocky'}
               </h2>
               <span style={{ fontSize: '14px' }}>👋</span>
             </div>

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import confetti from 'canvas-confetti';
 import { sounds } from '../utils/audio';
 import { getUserId, getUserFromFirestore, saveUserToFirestore } from '../firebase';
+import { getTelegramUser } from '../utils/telegram';
 
 const AppContext = createContext();
 
@@ -10,6 +11,55 @@ export const AppProvider = ({ children }) => {
   const isLoaded = useRef(false);
   const lastSavedJson = useRef('');
   const saveTimerRef = useRef(null);
+
+  // Authenticated Telegram User tracking
+  const [tgSession] = useState(() => getTelegramUser());
+
+  // String Telegram ID tracking (pure numeric string or empty if web)
+  const [userTelegramId, setUserTelegramId] = useState(() => {
+    if (tgSession?.id) {
+      const sId = String(tgSession.id);
+      localStorage.setItem('bp_tg_id', sId);
+      return sId;
+    }
+    return localStorage.getItem('bp_tg_id') || '';
+  });
+
+  // User Telegram Name tracking
+  const [userName, setUserName] = useState(() => {
+    if (tgSession?.fullName) {
+      localStorage.setItem('bp_user_name', tgSession.fullName);
+      return tgSession.fullName;
+    }
+    return localStorage.getItem('bp_user_name') || 'Rocky';
+  });
+
+  // User First Name for greetings ("Hi, {firstName}")
+  const [userFirstName, setUserFirstName] = useState(() => {
+    if (tgSession?.firstName) {
+      localStorage.setItem('bp_first_name', tgSession.firstName);
+      return tgSession.firstName;
+    }
+    return localStorage.getItem('bp_first_name') || 'Rocky';
+  });
+
+  // User Telegram @username
+  const [userUsername, setUserUsername] = useState(() => {
+    if (tgSession?.username) {
+      localStorage.setItem('bp_username', tgSession.username);
+      return tgSession.username;
+    }
+    return localStorage.getItem('bp_username') || '';
+  });
+
+  // User Telegram profile avatar
+  const [userPhoto, setUserPhoto] = useState(() => {
+    if (tgSession?.photoUrl) {
+      localStorage.setItem('bp_user_photo', tgSession.photoUrl);
+      return tgSession.photoUrl;
+    }
+    return localStorage.getItem('bp_user_photo') || '/assets/mascot_boy.jpg';
+  });
 
   // Real database-driven states (starting clean for actual accounts)
   const [balance, setBalance] = useState(() => {
@@ -70,10 +120,19 @@ export const AppProvider = ({ children }) => {
           if (remoteData.dailyClaimed !== undefined) setDailyClaimed(remoteData.dailyClaimed);
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
           if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
+
+          // Restore Telegram metadata if previously tracked in Firestore
+          if (remoteData.telegramName && !tgSession?.fullName) setUserName(remoteData.telegramName);
+          if (remoteData.telegramFirstName && !tgSession?.firstName) setUserFirstName(remoteData.telegramFirstName);
+          if (remoteData.telegramUsername && !tgSession?.username) setUserUsername(remoteData.telegramUsername);
+          if (remoteData.photoUrl && !tgSession?.photoUrl) setUserPhoto(remoteData.photoUrl);
+          if (remoteData.telegramId && !tgSession?.id) setUserTelegramId(String(remoteData.telegramId));
         }
 
         // Initialize lastSaved snapshot
         const initialPayload = {
+          telegramId: String(remoteData?.telegramId ?? userTelegramId ?? ''),
+          telegramName: remoteData?.telegramName ?? userName,
           balance: remoteData?.balance ?? balance,
           tokens: remoteData?.tokens ?? tokens,
           spinsLeft: remoteData?.spinsLeft ?? spinsLeft,
@@ -93,7 +152,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [userId, tgSession]);
 
   // Sync state to local storage immediately & Firestore with debouncing
   useEffect(() => {
@@ -101,11 +160,25 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem('bp_tokens', tokens.toString());
     localStorage.setItem('bp_spins', spinsLeft.toString());
     localStorage.setItem('bp_phone', userPhone);
+    if (userTelegramId) localStorage.setItem('bp_tg_id', String(userTelegramId));
+    if (userName) localStorage.setItem('bp_user_name', userName);
+    if (userFirstName) localStorage.setItem('bp_first_name', userFirstName);
+    if (userUsername) localStorage.setItem('bp_username', userUsername);
+    if (userPhoto) localStorage.setItem('bp_user_photo', userPhoto);
 
     // Only save to Firestore if remote load is finished
     if (!isLoaded.current) return;
 
+    // Guaranteed string Telegram ID
+    const tgIdString = String(userTelegramId || tgSession?.id || '');
+
     const currentPayload = {
+      telegramId: tgIdString, // Saved explicitly as string in database
+      rawTelegramId: tgIdString,
+      telegramName: userName,
+      telegramFirstName: userFirstName,
+      telegramUsername: userUsername,
+      photoUrl: userPhoto,
       balance,
       tokens,
       spinsLeft,
@@ -136,7 +209,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, transactions, tasks, userId]);
+  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, transactions, tasks, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
 
   // Sound toggle
   const toggleSound = () => {
@@ -206,6 +279,12 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         userId,
+        userTelegramId,
+        userName,
+        setUserName,
+        userFirstName,
+        userUsername,
+        userPhoto,
         userPhone,
         setUserPhone,
         balance,

@@ -16,6 +16,33 @@ export const isTelegramEnvironment = () => {
 };
 
 /**
+ * Extract authenticated Telegram User data
+ * Converts user ID strictly to a string and extracts name and avatar
+ */
+export const getTelegramUser = () => {
+  const tg = getTelegramWebApp();
+  const u = tg?.initDataUnsafe?.user;
+  if (u && (u.id !== undefined && u.id !== null)) {
+    const rawId = String(u.id); // Guaranteed string representation of Telegram ID
+    const firstName = u.first_name ? String(u.first_name).trim() : '';
+    const lastName = u.last_name ? String(u.last_name).trim() : '';
+    const fullName = [firstName, lastName].filter(Boolean).join(' ') || firstName || u.username || 'Rocky';
+    return {
+      id: rawId,
+      rawId: rawId,
+      username: u.username || '',
+      firstName: firstName || 'Rocky',
+      lastName: lastName || '',
+      fullName: fullName,
+      photoUrl: u.photo_url || '',
+      isPremium: Boolean(u.is_premium),
+      languageCode: u.language_code || 'bn'
+    };
+  }
+  return null;
+};
+
+/**
  * Initialize Telegram Mini App Fullscreen & Safety Settings
  */
 export const initTelegramApp = () => {

@@ -18,11 +18,11 @@ import {
 import cigaretteIcon from '../assets/cigarette-icon.png';
 
 export const InviteScreen = () => {
-  const { userId, tokens, navigateTo, notifySuccess } = useApp();
+  const { userId, userTelegramId, tokens, navigateTo, notifySuccess } = useApp();
   const [copied, setCopied] = useState(false);
 
-  // Generate Referral Link and Code
-  const cleanCode = (userId || 'user123').replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase();
+  // Generate Referral Link and Code from Telegram string ID or User ID
+  const cleanCode = (userTelegramId || userId || 'user123').replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase();
   const referralLink = `https://t.me/BengaliPay_bot?start=ref_${cleanCode}`;
   const shareMessage = `🔥 Bengali Pay তে প্রতিদিন কামলা দিয়ে, গেম খেলে আর টাস্ক করে বিকাশ ও নগদে টাকা আয় করুন! আমার ইনভাইট লিঙ্কে জয়েন করলেই পাবেন ফ্রি বোনাস টোকেন! ৳`;
 

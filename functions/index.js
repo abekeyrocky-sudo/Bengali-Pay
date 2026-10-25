@@ -5,10 +5,53 @@
 
 import { onRequest } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+
+if (!getApps().length) {
+  initializeApp();
+}
+const db = getFirestore();
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const APP_URL = process.env.APP_URL || "https://bengali-pay.netlify.app/";
 const API_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+/**
+ * Track and sync Telegram User to Firestore database
+ * Guarantees Telegram ID is stored as an exact String
+ */
+async function trackUserInFirestore(user) {
+  if (!user || user.id === undefined || user.id === null) return;
+  try {
+    const tgIdStr = String(user.id); // Guaranteed String in database
+    const docId = `tg_${tgIdStr}`;
+    const userRef = db.collection("users").doc(docId);
+
+    const firstName = user.first_name ? String(user.first_name).trim() : "";
+    const lastName = user.last_name ? String(user.last_name).trim() : "";
+    const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstName || user.username || "Rocky";
+
+    await userRef.set(
+      {
+        telegramId: tgIdStr, // Guaranteed String in database
+        rawTelegramId: tgIdStr,
+        telegramName: fullName,
+        telegramFirstName: firstName,
+        telegramUsername: user.username ? String(user.username) : "",
+        isPremium: Boolean(user.is_premium),
+        languageCode: user.language_code || "bn",
+        lastActiveAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    logger.info(`Tracked Telegram User in DB: ${docId} (${fullName})`);
+  } catch (err) {
+    logger.warn("Firestore user tracking notice:", err.message);
+  }
+}
 
 /**
  * Call Telegram API
@@ -150,6 +193,11 @@ export const telegramBot = onRequest(
 
         logger.info(`Incoming command [${text}] from ${user.username || user.first_name}`);
 
+        // Track Telegram user ID as string and name in Firestore
+        if (user && user.id) {
+          await trackUserInFirestore(user);
+        }
+
         if (text.startsWith("/start") || text.startsWith("/play")) {
           await sendWelcome(chatId, user);
         } else if (text.startsWith("/help")) {
@@ -163,6 +211,9 @@ export const telegramBot = onRequest(
       if (update.callback_query) {
         const cb = update.callback_query;
         const chatId = cb.message?.chat?.id;
+        if (cb.from && cb.from.id) {
+          await trackUserInFirestore(cb.from);
+        }
         if (cb.data === "help_info" && chatId) {
           await sendHelp(chatId);
         }
