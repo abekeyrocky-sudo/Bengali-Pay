@@ -82,6 +82,7 @@ async function processReferralReward(newUser, referrerParam) {
   
   const newTgId = String(newUser.id);
   const cleanRefParam = String(referrerParam).trim();
+  const cleanRefId = cleanRefParam.replace(/^tg_/, "").trim();
 
   // 1. Prevent self-referral
   if (cleanRefParam === newTgId || cleanRefParam.includes(newTgId)) {
@@ -150,7 +151,6 @@ async function processReferralReward(newUser, referrerParam) {
       {
         telegramId: referrerTgId,
         balance: FieldValue.increment(REFER_REWARD),
-        tokens: FieldValue.increment(REFER_REWARD),
         referralCount: FieldValue.increment(1),
         referralBonus: FieldValue.increment(REFER_REWARD),
         updatedAt: FieldValue.serverTimestamp()
@@ -179,46 +179,51 @@ async function processReferralReward(newUser, referrerParam) {
       createdAt: FieldValue.serverTimestamp()
     });
 
-    // 7. Send Telegram Bot Photo Notification to Referrer (Short & Clean Vibe)
+    // 7. Send Telegram Bot Notification to Referrer (Original Professional Text Format with Styled Buttons)
     const newTotalCount = ((referrerData?.referralCount || 0) + 1);
-    const notifyCaption = 
-`🎉 <b>রেফারেল বোনাস যোগ হয়েছে!</b>
+    const notifyMessage = 
+`🎉 <b>অভিনন্দন! নতুন রেফারেল সফল হয়েছে!</b>
 
-💰 <b>+৫০৳</b> রিওয়ার্ড পেয়েছেন
-👤 বন্ধু: <b>${newUserName}</b>
-👥 মোট রেফারেল: <b>${newTotalCount}</b> জন`;
+👤 <b>${newUserName}</b> আপনার রেফারেল লিংক দিয়ে Bengali Pay-তে জয়েন করেছেন।
 
+💰 আপনার একাউন্টে <b>+৫০৳</b> রেফারেল বোনাস জমা হয়েছে!
+👥 আপনার মোট সফল রেফারেল: <b>${newTotalCount} জন।</b>
+
+কামলা দিন, টোকেন কামিয়ে বিকাশ ও নগদে ক্যাশআউট করুন! ৳`;
+
+    const baseAppUrl = (APP_URL || "https://bengali-pay.netlify.app/").replace(/\/+$/, "");
     const replyMarkup = {
       inline_keyboard: [
         [
           {
             text: "🚀 অ্যাপে ব্যালেন্স দেখুন",
-            web_app: { url: APP_URL }
+            web_app: { url: `${baseAppUrl}/` },
+            style: "success"
+          }
+        ],
+        [
+          {
+            text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+            url: "https://t.me/BengaliPay",
+            style: "danger"
           }
         ]
       ]
     };
 
-    if (referrerTgId && /^\d+$/.test(referrerTgId)) {
-      const photoUrl = `${APP_URL}invite-notification-imag.jpg`;
-      let sendRes = await telegramApi("sendPhoto", {
-        chat_id: referrerTgId,
-        photo: photoUrl,
-        caption: notifyCaption,
+    const targetChatId = String(referrerTgId || referrerData?.telegramId || referrerData?.rawTelegramId || cleanRefParam).replace(/^tg_/, "").trim();
+
+    if (targetChatId && /^\d+$/.test(targetChatId)) {
+      logger.info(`Sending referral notification to ${targetChatId}...`);
+      const sendRes = await telegramApi("sendMessage", {
+        chat_id: targetChatId,
+        text: notifyMessage,
         parse_mode: "HTML",
         reply_markup: replyMarkup
       });
-
-      // Graceful fallback to text message if photo delivery fails
-      if (!sendRes || !sendRes.ok) {
-        sendRes = await telegramApi("sendMessage", {
-          chat_id: referrerTgId,
-          text: notifyCaption,
-          parse_mode: "HTML",
-          reply_markup: replyMarkup
-        });
-      }
-      logger.info(`Referral notification sent to referrer ${referrerTgId}:`, sendRes?.ok);
+      logger.info(`Referral notification result for ${targetChatId}:`, JSON.stringify(sendRes));
+    } else {
+      logger.warn(`Cannot send notification: targetChatId [${targetChatId}] is not a valid numeric Telegram ID.`);
     }
 
     logger.info(`Referral successfully processed: new user ${newTgId} referred by ${referrerTgId}, +50৳ credited.`);
@@ -246,21 +251,21 @@ async function sendWelcome(chatId, user) {
     inline_keyboard: [
       [
         {
-          text: "অ্যাপ খুলুন",
+          text: "Start",
           web_app: { url: APP_URL },
           style: "success"
         }
       ],
       [
         {
-          text: "অফিশিয়াল চ্যানেল",
-          url: "https://t.me/BengaliPay_bot",
+          text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+          url: "https://t.me/BengaliPay",
           style: "danger"
         }
       ],
       [
         {
-          text: "নিয়ম ও সাহায্য",
+          text: "সাহায্য ও নিয়ম",
           callback_data: "help_info",
           style: "success"
         }
@@ -309,8 +314,23 @@ async function sendHelp(chatId) {
     inline_keyboard: [
       [
         {
-          text: "🚀 অ্যাপ ওপেন করুন",
-          web_app: { url: APP_URL }
+          text: "Start",
+          web_app: { url: APP_URL },
+          style: "success"
+        }
+      ],
+      [
+        {
+          text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+          url: "https://t.me/BengaliPay",
+          style: "danger"
+        }
+      ],
+      [
+        {
+          text: "🔙 প্রধান মেনু",
+          callback_data: "main_menu",
+          style: "success"
         }
       ]
     ]
@@ -353,7 +373,7 @@ export const telegramBot = onRequest(
 
     // Direct API call from Mini App to verify @BengaliPay channel membership
     if (update.action === "check_channel_member") {
-      const cleanId = String(update.userId || "").replace("tg_", "").trim();
+      const cleanId = String(update.userId || update.user_id || update.userTelegramId || "").replace("tg_", "").trim();
       if (!cleanId) {
         res.status(200).json({ ok: true, isMember: false, reason: "no_user_id" });
         return;

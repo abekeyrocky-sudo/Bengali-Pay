@@ -21,8 +21,34 @@ export const isTelegramEnvironment = () => {
  */
 export const getTelegramUser = () => {
   const tg = getTelegramWebApp();
-  const u = tg?.initDataUnsafe?.user;
-  const startParam = tg?.initDataUnsafe?.start_param || '';
+  let u = tg?.initDataUnsafe?.user;
+  let startParam = tg?.initDataUnsafe?.start_param || '';
+
+  // Fallback 1: Parse from tg.initData string if initDataUnsafe is not yet parsed
+  if (!u && tg?.initData) {
+    try {
+      const p = new URLSearchParams(tg.initData);
+      const userStr = p.get('user');
+      if (userStr) u = JSON.parse(userStr);
+      if (!startParam) startParam = p.get('start_param') || '';
+    } catch (e) {}
+  }
+
+  // Fallback 2: Parse from window.location.hash (#tgWebAppData=...)
+  if (!u && typeof window !== 'undefined' && window.location.hash) {
+    try {
+      const hash = window.location.hash.substring(1);
+      const p = new URLSearchParams(hash);
+      const tgWebAppData = p.get('tgWebAppData');
+      if (tgWebAppData) {
+        const sub = new URLSearchParams(tgWebAppData);
+        const userStr = sub.get('user');
+        if (userStr) u = JSON.parse(userStr);
+        if (!startParam) startParam = sub.get('start_param') || '';
+      }
+    } catch (e) {}
+  }
+
   if (u && (u.id !== undefined && u.id !== null)) {
     const rawId = String(u.id); // Guaranteed string representation of Telegram ID
     const firstName = u.first_name ? String(u.first_name).trim() : '';
@@ -42,6 +68,19 @@ export const getTelegramUser = () => {
     };
   }
   return null;
+};
+
+/**
+ * Get active numeric Telegram user ID as a string from all available sources
+ */
+export const getActiveTelegramUserId = () => {
+  const user = getTelegramUser();
+  if (user?.id) return String(user.id);
+  const stored = localStorage.getItem('bp_tg_id');
+  if (stored) return String(stored);
+  const uid = localStorage.getItem('bp_uid');
+  if (uid && uid.startsWith('tg_')) return uid.replace('tg_', '');
+  return '';
 };
 
 /**

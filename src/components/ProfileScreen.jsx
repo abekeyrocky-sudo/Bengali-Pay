@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EmptyState } from './EmptyState';
 import { useApp } from '../context/AppContext';
 import { 
   Settings, 
@@ -354,9 +355,12 @@ export const ProfileScreen = () => {
                   </div>
                 ))
               ) : (
-                <p style={{ fontSize: '13px', color: '#64748b', padding: '20px 0' }}>
-                  এখনো কোনো উইথড্র করা হয়নি।
-                </p>
+                <EmptyState
+                  title="কোনো হিস্ট্রি নেই"
+                  subtitle="এখনো কোনো উইথড্র করা হয়নি।"
+                  animationSize={130}
+                  style={{ padding: '8px 4px', background: 'transparent' }}
+                />
               )}
             </div>
             <button

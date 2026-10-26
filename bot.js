@@ -86,21 +86,21 @@ async function handleStartCommand(chatId, user) {
     inline_keyboard: [
       [
         {
-          text: 'অ্যাপ খুলুন',
+          text: 'Start',
           web_app: { url: APP_URL },
           style: 'success'
         }
       ],
       [
         {
-          text: 'অফিশিয়াল চ্যানেল',
-          url: 'https://t.me/BengaliPay_bot',
+          text: 'অফিসিয়াল গ্রুপ / চ্যানেল',
+          url: 'https://t.me/BengaliPay',
           style: 'danger'
         }
       ],
       [
         {
-          text: 'নিয়ম ও সাহায্য',
+          text: 'সাহায্য ও নিয়ম',
           callback_data: 'help_info',
           style: 'success'
         }
@@ -178,8 +178,23 @@ async function handleHelpCommand(chatId) {
     inline_keyboard: [
       [
         {
-          text: '🚀 অ্যাপ ওপেন করুন',
-          web_app: { url: APP_URL }
+          text: 'Start',
+          web_app: { url: APP_URL },
+          style: 'success'
+        }
+      ],
+      [
+        {
+          text: 'অফিসিয়াল গ্রুপ / চ্যানেল',
+          url: 'https://t.me/BengaliPay',
+          style: 'danger'
+        }
+      ],
+      [
+        {
+          text: '🔙 প্রধান মেনু',
+          callback_data: 'main_menu',
+          style: 'success'
         }
       ]
     ]

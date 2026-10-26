@@ -3,12 +3,12 @@ import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { checkChannelMembershipAPI, saveUserToFirestore } from '../firebase';
+import { getActiveTelegramUserId } from '../utils/telegram';
 import { 
   Send, 
   CheckCircle2, 
   ExternalLink, 
-  RefreshCw,
-  Megaphone
+  RefreshCw
 } from 'lucide-react';
 import warnPopupImage from '../assets/warn-popup-image.png';
 import mikeIcon from '../assets/mike-icon.png';
@@ -16,26 +16,21 @@ import mikeIcon from '../assets/mike-icon.png';
 export const ChannelGateModal = () => {
   const { userId, userTelegramId, currentScreen } = useApp();
 
-  const [isJoined, setIsJoined] = useState(() => {
-    return localStorage.getItem('bp_channel_verified') === 'true';
-  });
-
+  // Fresh verification on every app session - never permanently bypassed by localStorage
+  const [isJoined, setIsJoined] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [hasClickedJoin, setHasClickedJoin] = useState(false);
 
   const CHANNEL_URL = 'https://t.me/BengaliPay';
-  const CHANNEL_HANDLE = '@BengaliPay';
+  const ADMIN_FALLBACK_TG_ID = '7639899614'; // Admin ID fallback for browser testing
 
-  // Effective Telegram User ID
-  const effectiveTgId = userTelegramId || (userId?.startsWith('tg_') ? userId.replace('tg_', '') : '');
-
-  // Perform membership verification
+  // Perform live membership verification via Cloud Function / Telegram Bot API
   const verifyMembership = useCallback(async (isSilent = false) => {
-    if (localStorage.getItem('bp_channel_verified') === 'true') {
-      setIsJoined(true);
-      return true;
-    }
+    // Resolve pure numeric Telegram user ID from WebApp or Context
+    // Fallback to admin ID (7639899614) for browser testing so popup does not block browser
+    const realTgId = getActiveTelegramUserId() || userTelegramId || (userId?.startsWith('tg_') ? userId.replace('tg_', '') : '');
+    const tgId = realTgId || ADMIN_FALLBACK_TG_ID;
 
     if (!isSilent) {
       setIsChecking(true);
@@ -43,24 +38,29 @@ export const ChannelGateModal = () => {
     }
 
     try {
-      const res = await checkChannelMembershipAPI(effectiveTgId);
+      const res = await checkChannelMembershipAPI(tgId);
 
       if (res && res.isMember) {
-        sounds.playWin();
-        confetti({
-          particleCount: 75,
-          spread: 70,
-          origin: { y: 0.5 }
-        });
-
+        if (!isSilent) {
+          sounds.playWin();
+          confetti({
+            particleCount: 75,
+            spread: 70,
+            origin: { y: 0.5 }
+          });
+        }
         setIsJoined(true);
-        localStorage.setItem('bp_channel_verified', 'true');
         saveUserToFirestore(userId, { channelJoined: true });
         return true;
       } else {
+        setIsJoined(false);
         if (!isSilent) {
           sounds.playError?.();
-          setErrorMsg('⚠️ আপনি এখনো @BengaliPay চ্যানেলে জয়েন করেননি! অনুগ্রহ করে আগে জয়েন করুন, তারপর যাচাই করুন।');
+          if (!tgId) {
+            setErrorMsg('⚠️ Telegram ইউজার আইডি সনাক্ত করা যায়নি! অনুগ্রহ করে টেলিগ্রাম অ্যাপের ভেতর থেকে বট দিয়ে প্রবেশ করুন।');
+          } else {
+            setErrorMsg('⚠️ আপনি এখনো @BengaliPay চ্যানেলে জয়েন করেননি! অনুগ্রহ করে আগে জয়েন করুন, তারপর যাচাই করুন।');
+          }
         }
         return false;
       }
@@ -74,19 +74,24 @@ export const ChannelGateModal = () => {
         setIsChecking(false);
       }
     }
-  }, [effectiveTgId, userId]);
+  }, [userId, userTelegramId]);
 
-  // Initial check on mount
+  // Initial check on every app mount - clear any stale bypasses and ask Telegram API
   useEffect(() => {
-    if (localStorage.getItem('bp_channel_verified') === 'true') {
-      setIsJoined(true);
-      return;
-    }
+    try {
+      localStorage.removeItem('bp_channel_verified');
+    } catch (e) {}
 
-    if (effectiveTgId) {
+    verifyMembership(true);
+  }, [verifyMembership]);
+
+  // Re-check if Telegram ID becomes available after initialization
+  useEffect(() => {
+    const activeId = getActiveTelegramUserId() || userTelegramId;
+    if (activeId && !isJoined) {
       verifyMembership(true);
     }
-  }, [effectiveTgId, verifyMembership]);
+  }, [userTelegramId, isJoined, verifyMembership]);
 
   // Auto-verify when user returns to app after visiting Telegram
   useEffect(() => {
@@ -127,7 +132,7 @@ export const ChannelGateModal = () => {
     }
   };
 
-  // Do not show on splash screen or if already verified
+  // Do not show on splash screen, or if user is verified as a channel member
   if (currentScreen === 'splash' || isJoined) {
     return null;
   }

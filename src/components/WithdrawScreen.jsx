@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import cigaretteIcon from '../assets/cigarette-icon.png';
+import { EmptyState } from './EmptyState';
 
 import { submitWithdrawalToFirestore, subscribeUserWithdrawals } from '../firebase';
 
@@ -858,40 +859,12 @@ export const WithdrawScreen = () => {
               paddingRight: '2px'
             }}>
               {withdrawalsList.length === 0 ? (
-                <div style={{
-                  padding: '36px 16px',
-                  textAlign: 'center',
-                  color: '#64748b'
-                }}>
-                  <div style={{
-                    width: '54px',
-                    height: '54px',
-                    borderRadius: '50%',
-                    background: '#f8fafc',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 12px'
-                  }}>
-                    <History size={26} color="#94a3b8" />
-                  </div>
-                  <h4 style={{
-                    fontSize: '15px',
-                    fontWeight: '800',
-                    color: '#1e293b',
-                    fontFamily: "'Noto Serif Bengali', sans-serif"
-                  }}>
-                    কোনো হিস্ট্রি নেই
-                  </h4>
-                  <p style={{
-                    fontSize: '12px',
-                    color: '#94a3b8',
-                    marginTop: '4px',
-                    fontFamily: "'Noto Serif Bengali', sans-serif"
-                  }}>
-                    উইথড্র রিকোয়েস্ট জমা দিলে তার বিবরণ ও স্ট্যাটাস এখানে দেখতে পাবেন।
-                  </p>
-                </div>
+                <EmptyState 
+                  title="কোনো হিস্ট্রি নেই"
+                  subtitle="উইথড্র রিকোয়েস্ট জমা দিলে তার বিবরণ ও স্ট্যাটাস এখানে দেখতে পাবেন।"
+                  animationSize={140}
+                  style={{ padding: '16px 8px', background: 'transparent' }}
+                />
               ) : (
                 withdrawalsList.map((item) => (
                   <div

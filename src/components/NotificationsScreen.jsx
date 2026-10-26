@@ -16,6 +16,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import notificationBell from '../assets/notification-bell.png';
+import { EmptyState } from './EmptyState';
 
 export const NotificationsScreen = () => {
   const { 
@@ -314,26 +315,12 @@ export const NotificationsScreen = () => {
         gap: '10px'
       }}>
         {filteredNotifications.length === 0 ? (
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '20px',
-            padding: '36px 20px',
-            textAlign: 'center',
-            border: '1.5px dashed #cbd5e1',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            marginTop: '10px'
-          }}>
-            <span style={{ fontSize: '32px' }}>🔔</span>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
-              কোনো নোটিফিকেশন নেই
-            </div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>
-              নতুন আপডেট ও রিওয়ার্ডের জন্য সাথে থাকুন!
-            </div>
-          </div>
+          <EmptyState 
+            title="কোনো নোটিফিকেশন নেই"
+            subtitle="নতুন আপডেট ও রিওয়ার্ডের জন্য সাথে থাকুন!"
+            animationSize={170}
+            style={{ marginTop: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}
+          />
         ) : (
           filteredNotifications.map((notif) => (
             <div

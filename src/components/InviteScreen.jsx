@@ -13,21 +13,21 @@ import {
   Star, 
   ChevronRight 
 } from 'lucide-react';
+import { getActiveTelegramUserId } from '../utils/telegram';
 import inviteHeroBanner from '../assets/invite-hero-banner.png';
 import inviteBottomBanner from '../assets/invite-bottom-banner.png';
 import inviteTeamArt from '../assets/invite-team-art.png';
 import inviteGiftArt from '../assets/invite-gift-art.png';
 
 export const InviteScreen = () => {
-  const { userId, userTelegramId, tokens, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess, addNotification } = useApp();
+  const { userId, userTelegramId, balance = 0, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess, addNotification } = useApp();
   const [copied, setCopied] = useState(false);
 
   const displayBonus = referralBonus || (referralCount * 50);
 
-  // Generate Referral Code and Direct Mini App Link (https://t.me/BengaliPay_bot/App)
-  const referralCode = userTelegramId 
-    ? String(userTelegramId) 
-    : (userId || 'ROCKY123').replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase();
+  // Guarantee Referral Code is always the pure numeric Telegram User ID
+  const activeTgId = getActiveTelegramUserId() || userTelegramId || (userId?.startsWith('tg_') ? userId.replace('tg_', '') : '');
+  const referralCode = activeTgId || '7639899614';
   const referralLink = `https://t.me/BengaliPay_bot/App?startapp=${referralCode}`;
   const shareMessage = `🔥 Bengali Pay তে বন্ধুদের আমন্ত্রণ জানিয়ে প্রতি রেফারে ৫০৳ বোনাস আয় করুন! বিকাশ ও নগদে সরাসরি উত্তোলনের সুযোগ। জয়েন করতে ক্লিক করুন: ৳`;
 
@@ -116,16 +116,16 @@ export const InviteScreen = () => {
           </h2>
         </div>
 
-        {/* Token Balance Pill Badge */}
+        {/* Cash Balance Pill Badge */}
         <div style={{
-          background: 'linear-gradient(135deg, #fffdf5 0%, #fef9c3 100%)',
-          border: '1.5px solid #fde047',
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+          border: '1.5px solid #86efac',
           borderRadius: '24px',
           padding: '4px 12px 4px 6px',
           display: 'flex',
           alignItems: 'center',
           gap: '7px',
-          boxShadow: '0 2px 8px rgba(234, 179, 8, 0.12)'
+          boxShadow: '0 2px 8px rgba(34, 197, 94, 0.12)'
         }}>
           {/* Green circular coin badge with ৳ */}
           <div style={{
@@ -147,10 +147,10 @@ export const InviteScreen = () => {
           <span style={{
             fontSize: '14px',
             fontWeight: '800',
-            color: '#854d0e',
+            color: '#166534',
             fontFamily: "'Outfit', sans-serif"
           }}>
-            {tokens} <span style={{ fontSize: '12px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+            {Number(balance || 0).toFixed(2)} <span style={{ fontSize: '13px', fontWeight: '800', fontFamily: "'Noto Serif Bengali', serif" }}>৳</span>
           </span>
         </div>
       </div>
@@ -318,12 +318,12 @@ export const InviteScreen = () => {
                 + {displayBonus}
               </span>
               <span style={{
-                fontSize: '11px',
-                color: '#64748b',
-                fontWeight: '700',
+                fontSize: '15px',
+                color: '#16a34a',
+                fontWeight: '800',
                 fontFamily: "'Noto Serif Bengali', serif"
               }}>
-                টোকেন
+                ৳
               </span>
             </div>
           </div>
@@ -512,7 +512,7 @@ export const InviteScreen = () => {
                 5 জন বন্ধু
               </div>
               <div style={{ fontSize: '11px', fontWeight: '900', color: '#16a34a', fontFamily: "'Outfit', sans-serif" }}>
-                +20 <span style={{ fontSize: '9px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+                +20 <span style={{ fontSize: '11px', fontWeight: '800', fontFamily: "'Noto Serif Bengali', serif" }}>৳</span>
               </div>
             </div>
           </div>
@@ -548,7 +548,7 @@ export const InviteScreen = () => {
                 10 জন বন্ধু
               </div>
               <div style={{ fontSize: '11px', fontWeight: '900', color: '#0284c7', fontFamily: "'Outfit', sans-serif" }}>
-                +50 <span style={{ fontSize: '9px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+                +50 <span style={{ fontSize: '11px', fontWeight: '800', fontFamily: "'Noto Serif Bengali', serif" }}>৳</span>
               </div>
             </div>
           </div>
@@ -584,7 +584,7 @@ export const InviteScreen = () => {
                 20 জন বন্ধু
               </div>
               <div style={{ fontSize: '11px', fontWeight: '900', color: '#ca8a04', fontFamily: "'Outfit', sans-serif" }}>
-                +100 <span style={{ fontSize: '9px', fontWeight: '700', fontFamily: "'Noto Serif Bengali', serif" }}>টোকেন</span>
+                +100 <span style={{ fontSize: '11px', fontWeight: '800', fontFamily: "'Noto Serif Bengali', serif" }}>৳</span>
               </div>
             </div>
           </div>
