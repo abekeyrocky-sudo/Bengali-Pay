@@ -28,16 +28,16 @@ export const GameScreen = () => {
   const [boardPressed, setBoardPressed] = useState(false);
 
   // 8 segments with opposite pairing (sojasoji layout: 10৳ vs 10৳, 20৳ vs 20৳, 50৳ vs 50৳, 50 Token vs 100 Token)
-  // Pairwise color harmony matching screen landscape (Green, Blue, Purple, Gold)
+  // Flat UI palette: Bright Orange (#FF914D), Lime Green (#7ED957), Sky Blue (#38B6FF), Hot Pink (#FF47A7)
   const segments = [
-    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
-    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#0284c7', textColor: '#0c4a6e' },
-    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#7c3aed', textColor: '#4c1d95' },
-    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
-    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
-    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#0284c7', textColor: '#0c4a6e' },
-    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#7c3aed', textColor: '#4c1d95' },
-    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
+    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#7ED957', textColor: '#22543d' },
+    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#38B6FF', textColor: '#1a365d' },
+    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#FF47A7', textColor: '#702459' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#FF914D', textColor: '#7b341e' },
+    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#7ED957', textColor: '#22543d' },
+    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#38B6FF', textColor: '#1a365d' },
+    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#FF47A7', textColor: '#702459' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#FF914D', textColor: '#7b341e' },
   ];
 
   const segAngle = 360 / segments.length;
@@ -263,17 +263,42 @@ export const GameScreen = () => {
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))'
           }} />
 
-          {/* Wooden Wheel Exterior Rim */}
+          {/* Golden Wheel Exterior Rim with Light Bulbs */}
           <div style={{
             position: 'relative',
             width: '286px',
             height: '286px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, #78350f 70%, #451a03 100%)',
+            background: 'radial-gradient(circle, #FFD700 0%, #FFC107 70%, #FFA000 100%)',
             padding: '10px',
-            boxShadow: '0 15px 35px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.6)',
-            border: '4px solid #facc15'
+            boxShadow: '0 15px 35px rgba(0,0,0,0.35), 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 6px rgba(180, 83, 9, 0.3)',
+            border: '4px solid #FFD700'
           }}>
+            {/* Border Light Bulbs (White & Pale Yellow glowing dots around the rim) */}
+            {[...Array(16)].map((_, i) => {
+              const angle = (i * 360 / 16) * (Math.PI / 180);
+              const bx = 143 + 137 * Math.cos(angle);
+              const by = 143 + 137 * Math.sin(angle);
+              return (
+                <div
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    left: `${bx}px`,
+                    top: `${by}px`,
+                    transform: 'translate(-50%, -50%)',
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#FFFDE7',
+                    boxShadow: '0 0 4px 1px rgba(255, 255, 255, 0.95), 0 0 2px rgba(255, 193, 7, 0.8)',
+                    zIndex: 22,
+                    pointerEvents: 'none'
+                  }}
+                />
+              );
+            })}
+
             {/* Rotating Wheel Itself */}
             <div
               style={{
@@ -317,18 +342,19 @@ export const GameScreen = () => {
 
                       {/* Slot Content: Amount on top, 3D Icon on bottom (replacing ৳ and টোকেন text) */}
                       <g transform={`rotate(${midAngle}, ${tx}, ${ty})`}>
-                        {/* Number Amount */}
+                        {/* Number Amount with 28% drop shadow for clean contrast */}
                         <text
                           x={tx}
                           y={ty - 5.2}
-                          fill="#ffffff"
+                          fill="#FFFFFF"
                           fontSize="6.6"
                           fontWeight="900"
                           fontFamily="'Outfit', sans-serif"
                           textAnchor="middle"
                           dominantBaseline="central"
                           style={{ 
-                            textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,0.6)',
+                            filter: 'drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.28))',
+                            textShadow: '0 1.5px 2px rgba(0, 0, 0, 0.28)',
                             letterSpacing: '0.2px'
                           }}
                         >
@@ -366,7 +392,7 @@ export const GameScreen = () => {
               </svg>
             </div>
 
-            {/* Center SPIN Button */}
+            {/* Center Golden SPIN Button */}
             <button
               onClick={spinWheel}
               disabled={spinning}
@@ -378,20 +404,21 @@ export const GameScreen = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, #facc15 0%, #ca8a04 80%, #a16207 100%)',
-                border: '4px solid #ffffff',
-                boxShadow: '0 6px 16px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.8)',
+                background: 'radial-gradient(circle, #FFF59D 0%, #FFD700 55%, #FFC107 100%)',
+                border: '4px solid #FFFFFF',
+                boxShadow: '0 6px 18px rgba(0,0,0,0.35), inset 0 2px 4px rgba(255,255,255,0.8), 0 0 10px rgba(255, 215, 0, 0.5)',
                 cursor: spinning ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 25,
-                color: '#451a03',
+                color: '#78350f',
                 fontFamily: "'Outfit', sans-serif",
                 fontWeight: '900',
-                fontSize: '13px',
-                letterSpacing: '0.5px'
+                fontSize: '14px',
+                letterSpacing: '0.6px',
+                textShadow: '0 1px 1px rgba(255,255,255,0.6)'
               }}
             >
               <span>SPIN</span>
