@@ -92,8 +92,8 @@ export const GameScreen = () => {
       addNotification({
         category: 'offers',
         type: 'offer',
-        title: 'Ad Bonus Received! 🎁',
-        message: 'You received +1 Free Spin from the Top Sponsored Ad Banner.'
+        title: 'অ্যাড বোনাস সফল! 🎁',
+        message: 'বিজ্ঞাপন দেখার জন্য +১টি ফ্রি স্পিন দেওয়া হয়েছে।'
       });
     }
   };
@@ -157,7 +157,7 @@ export const GameScreen = () => {
       setSpinning(false);
       setSpinsLeft(prev => Math.max(0, prev - 1));
       setWinPrize(prize);
-      earnReward(prize.value, 1, `Spin & Win Prize (${prize.label})`);
+      earnReward(prize.value, 1, `স্পিন হুইল পুরস্কার (${prize.label})`);
     }, 4200);
   };
 

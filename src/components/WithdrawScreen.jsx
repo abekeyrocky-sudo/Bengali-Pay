@@ -155,8 +155,8 @@ export const WithdrawScreen = () => {
         addNotification({
           category: 'rewards',
           type: 'withdraw',
-          title: 'Withdraw Requested!',
-          message: `Your request for ${numAmount} ৳ (${method.toUpperCase()}) has been submitted.`
+          title: 'উইথড্র আবেদন জমা হয়েছে!',
+          message: `${numAmount} ৳ উত্তোলনের আবেদন (${method.toUpperCase()}) সফলভাবে জমা হয়েছে।`
         });
       }
 

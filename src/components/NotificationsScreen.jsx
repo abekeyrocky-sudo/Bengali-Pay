@@ -31,10 +31,10 @@ export const NotificationsScreen = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'rewards', 'updates', 'offers'
 
   const tabs = [
-    { id: 'all', label: 'All', icon: Bell },
-    { id: 'rewards', label: 'Rewards', icon: Gift },
-    { id: 'updates', label: 'Updates', icon: Megaphone },
-    { id: 'offers', label: 'Offers', icon: Star }
+    { id: 'all', label: 'সকল', icon: Bell },
+    { id: 'rewards', label: 'রিওয়ার্ড', icon: Gift },
+    { id: 'updates', label: 'আপডেট', icon: Megaphone },
+    { id: 'offers', label: 'অফার', icon: Star }
   ];
 
   // Filter notifications by active tab
@@ -219,18 +219,19 @@ export const NotificationsScreen = () => {
               fontSize: '20px',
               fontWeight: '900',
               color: '#0f172a',
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
               lineHeight: 1.15
             }}>
-              Notifications
+              নোটিফিকেশন
             </h1>
             <p style={{
               fontSize: '12px',
               color: '#64748b',
               fontWeight: '600',
-              marginTop: '2px'
+              marginTop: '2px',
+              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
             }}>
-              Stay updated with latest news!
+              নতুন সকল আপডেট ও রিওয়ার্ডের তথ্য!
             </p>
           </div>
         </div>
@@ -429,7 +430,7 @@ export const NotificationsScreen = () => {
             }}
           >
             <Trash2 size={15} color="#16a34a" />
-            <span>Clear All</span>
+            <span>সব মুছুন</span>
           </button>
         </div>
       )}

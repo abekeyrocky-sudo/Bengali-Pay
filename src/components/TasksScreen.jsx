@@ -616,7 +616,7 @@ export const TasksScreen = () => {
 
             <button
               onClick={() => {
-                earnReward(0, 10, 'Referral Bonus');
+                earnReward(0, 10, 'রেফারেল টাস্ক বোনাস');
                 markTaskDone('refer');
                 setActiveModal(null);
               }}

@@ -55,8 +55,8 @@ export const InviteScreen = () => {
       addNotification({
         category: 'offers',
         type: 'offer',
-        title: 'Special Offer!',
-        message: 'Get 50 ৳ Bonus for inviting more friends.'
+        title: 'বন্ধুদের ইনভাইট করুন!',
+        message: 'প্রতিটি সফল রেফারে ৫০ ৳ ক্যাশ বোনাস জিতে নিন।'
       });
     }
 
