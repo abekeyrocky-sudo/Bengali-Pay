@@ -265,7 +265,7 @@ export const DailyLoginModal = () => {
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px',
+                      gap: '12px',
                       flex: 1,
                       justifyContent: 'center'
                     }}>
@@ -273,15 +273,15 @@ export const DailyLoginModal = () => {
                         src={cigaretteIcon} 
                         alt="Cigarette Token" 
                         style={{
-                          width: '32px',
-                          height: '32px',
+                          width: '40px',
+                          height: '40px',
                           objectFit: 'contain',
-                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))'
+                          filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.18))'
                         }}
                       />
                       <div style={{ textAlign: 'left' }}>
                         <div style={{
-                          fontSize: '14px',
+                          fontSize: '15px',
                           fontWeight: '900',
                           color: '#7e22ce',
                           fontFamily: "'Noto Serif Bengali', serif",
@@ -296,11 +296,11 @@ export const DailyLoginModal = () => {
                       src={takaNoteIcon} 
                       alt="Taka Reward" 
                       style={{
-                        width: '30px',
-                        height: '30px',
+                        width: '44px',
+                        height: '34px',
                         objectFit: 'contain',
                         margin: '2px 0',
-                        filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12))'
+                        filter: 'drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15))'
                       }}
                     />
                   )}
