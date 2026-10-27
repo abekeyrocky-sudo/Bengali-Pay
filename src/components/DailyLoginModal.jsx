@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Flame, Sparkles, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 import cigaretteIcon from '../assets/cigarette-icon.png';
 
 export const DailyLoginModal = () => {
@@ -57,7 +57,7 @@ export const DailyLoginModal = () => {
         {/* Top Header Background Banner */}
         <div style={{
           background: 'linear-gradient(135deg, #15803d 0%, #16a34a 55%, #22c55e 100%)',
-          padding: '20px 20px 16px',
+          padding: '24px 20px 18px',
           color: '#ffffff',
           position: 'relative',
           textAlign: 'center'
@@ -86,31 +86,11 @@ export const DailyLoginModal = () => {
             <X size={18} />
           </button>
 
-          {/* Streak Flame Pill */}
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(255, 255, 255, 0.2)',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid rgba(255, 255, 255, 0.35)',
-            padding: '4px 14px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            fontWeight: '800',
-            fontFamily: "'Outfit', 'Noto Serif Bengali', serif, sans-serif",
-            marginBottom: '8px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-          }}>
-            <Flame size={15} color="#fde047" fill="#fde047" />
-            <span>১৪ দিনের স্ট্রিক চ্যালেঞ্জ</span>
-          </div>
-
           <h2 style={{
             fontSize: '22px',
             fontWeight: '900',
             fontFamily: "'Noto Serif Bengali', serif",
-            margin: '0 0 4px 0',
+            margin: '0 0 6px 0',
             letterSpacing: '-0.3px',
             textShadow: '0 2px 4px rgba(0,0,0,0.2)'
           }}>
@@ -118,7 +98,7 @@ export const DailyLoginModal = () => {
           </h2>
 
           <p style={{
-            fontSize: '12px',
+            fontSize: '13px',
             color: '#dcfce7',
             margin: 0,
             fontFamily: "'Noto Serif Bengali', serif",
@@ -126,23 +106,6 @@ export const DailyLoginModal = () => {
           }}>
             প্রতিদিন অ্যাপে প্রবেশ করলেই নিশ্চিত পুরস্কার!
           </p>
-
-          {/* Miss warning bar */}
-          <div style={{
-            marginTop: '10px',
-            background: 'rgba(0, 0, 0, 0.25)',
-            borderRadius: '12px',
-            padding: '6px 10px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '11px',
-            fontWeight: '700',
-            fontFamily: "'Noto Serif Bengali', serif",
-            color: '#fef08a'
-          }}>
-            <span>⚠️ নিয়ম: একদিন মিস করলে আবার ডে ১ থেকে শুরু হবে!</span>
-          </div>
         </div>
 
         {/* Scrollable 14-Day Grid Container */}
@@ -317,21 +280,13 @@ export const DailyLoginModal = () => {
                       />
                       <div style={{ textAlign: 'left' }}>
                         <div style={{
-                          fontSize: '13px',
+                          fontSize: '14px',
                           fontWeight: '900',
                           color: '#7e22ce',
                           fontFamily: "'Noto Serif Bengali', serif",
-                          lineHeight: 1.1
+                          lineHeight: 1.2
                         }}>
                           ৫০ সিগারেট টোকেন
-                        </div>
-                        <div style={{
-                          fontSize: '10px',
-                          fontWeight: '700',
-                          color: '#9333ea',
-                          fontFamily: "'Noto Serif Bengali', serif"
-                        }}>
-                          মেগা জ্যাকপট বোনাস! 🎁
                         </div>
                       </div>
                     </div>
@@ -399,14 +354,12 @@ export const DailyLoginModal = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
                 boxShadow: '0 8px 20px rgba(22, 163, 74, 0.35)',
                 transition: 'transform 0.1s ease'
               }}
               onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
-              <Sparkles size={18} color="#fde047" />
               <span>
                 আজকের পুরস্কার নিন: {currentReward.label}
               </span>
@@ -427,12 +380,10 @@ export const DailyLoginModal = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
                 cursor: 'default'
               }}
             >
-              <Check size={18} color="#16a34a" />
-              <span>আজকের রিওয়ার্ড সংগৃহীত ✅ (পরবর্তী রিওয়ার্ড আগামীকাল)</span>
+              <span>আজকের রিওয়ার্ড সংগৃহীত (পরবর্তী রিওয়ার্ড আগামীকাল)</span>
             </button>
           )}
 
