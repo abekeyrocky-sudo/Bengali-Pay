@@ -13,7 +13,8 @@ import {
   CheckCircle2, 
   Users, 
   Volume2,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import notificationBell from '../assets/notification-bell.png';
 import { EmptyState } from './EmptyState';
@@ -29,6 +30,7 @@ export const NotificationsScreen = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'rewards', 'updates', 'offers'
+  const [selectedNotif, setSelectedNotif] = useState(null);
 
   const tabs = [
     { id: 'all', label: 'সকল', icon: Bell },
@@ -50,6 +52,7 @@ export const NotificationsScreen = () => {
     if (!notif.read) {
       markNotificationAsRead(notif.id);
     }
+    setSelectedNotif(notif);
   };
 
   const handleClearAll = () => {
@@ -59,22 +62,27 @@ export const NotificationsScreen = () => {
   };
 
   // Helper to render customized category icon
-  const renderNotifIcon = (type, category) => {
+  const renderNotifIcon = (type, category, size = 46) => {
+    const isBig = size > 50;
+    const boxStyle = {
+      width: `${size}px`,
+      height: `${size}px`,
+      borderRadius: isBig ? '20px' : '14px',
+      fontSize: isBig ? '30px' : '22px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0
+    };
+
     switch (type) {
       case 'reward':
         return (
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '14px',
+            ...boxStyle,
             background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
             border: '1px solid #86efac',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: '#16a34a',
-            fontSize: '22px',
-            flexShrink: 0
           }}>
             🎁
           </div>
@@ -82,17 +90,10 @@ export const NotificationsScreen = () => {
       case 'update':
         return (
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '14px',
+            ...boxStyle,
             background: 'linear-gradient(135deg, #fef9c3 0%, #fef08a 100%)',
             border: '1px solid #fde047',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: '#ca8a04',
-            fontSize: '22px',
-            flexShrink: 0
           }}>
             📢
           </div>
@@ -100,35 +101,21 @@ export const NotificationsScreen = () => {
       case 'withdraw':
         return (
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '14px',
+            ...boxStyle,
             background: 'linear-gradient(135deg, #dcfce7 0%, #86efac 100%)',
             border: '1px solid #4ade80',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: '#15803d',
-            fontSize: '22px',
-            flexShrink: 0
           }}>
-            <CheckCircle2 size={24} color="#15803d" strokeWidth={2.5} />
+            <CheckCircle2 size={isBig ? 32 : 24} color="#15803d" strokeWidth={2.5} />
           </div>
         );
       case 'offer':
         return (
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '14px',
+            ...boxStyle,
             background: 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)',
             border: '1px solid #7dd3fc',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: '#0284c7',
-            fontSize: '22px',
-            flexShrink: 0
           }}>
             🎁
           </div>
@@ -136,38 +123,24 @@ export const NotificationsScreen = () => {
       case 'referral':
         return (
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '14px',
+            ...boxStyle,
             background: 'linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%)',
             border: '1px solid #c4b5fd',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: '#7c3aed',
-            fontSize: '22px',
-            flexShrink: 0
           }}>
-            <Users size={22} color="#7c3aed" strokeWidth={2.2} />
+            <Users size={isBig ? 30 : 22} color="#7c3aed" strokeWidth={2.2} />
           </div>
         );
       case 'system':
       default:
         return (
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '14px',
+            ...boxStyle,
             background: 'linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)',
             border: '1px solid #5eead4',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             color: '#0d9488',
-            fontSize: '22px',
-            flexShrink: 0
           }}>
-            <Volume2 size={22} color="#0d9488" strokeWidth={2.2} />
+            <Volume2 size={isBig ? 30 : 22} color="#0d9488" strokeWidth={2.2} />
           </div>
         );
     }
@@ -434,6 +407,143 @@ export const NotificationsScreen = () => {
             <Trash2 size={15} color="#16a34a" />
             <span>সব মুছুন</span>
           </button>
+        </div>
+      )}
+
+      {/* 5. Notification Details Popup Modal */}
+      {selectedNotif && (
+        <div 
+          onClick={() => setSelectedNotif(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1000,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '340px',
+              background: '#ffffff',
+              borderRadius: '26px',
+              padding: '24px 20px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              boxSizing: 'border-box'
+            }}
+          >
+            {/* Close Button (X) */}
+            <button
+              onClick={() => setSelectedNotif(null)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: '#f1f5f9',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748b'
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            {/* Notification Icon */}
+            <div style={{ marginBottom: '14px' }}>
+              {renderNotifIcon(selectedNotif.type, selectedNotif.category, 62)}
+            </div>
+
+            {/* Title */}
+            <h3 style={{
+              fontSize: '17px',
+              fontWeight: '900',
+              color: '#0f172a',
+              margin: '0 0 8px 0',
+              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+              lineHeight: 1.3
+            }}>
+              {selectedNotif.title}
+            </h3>
+
+            {/* Time Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: '600',
+              color: '#64748b',
+              marginBottom: '16px'
+            }}>
+              <Clock size={12} color="#64748b" />
+              <span>{selectedNotif.time}</span>
+            </div>
+
+            {/* Message Body Card */}
+            <div style={{
+              width: '100%',
+              background: '#f8fafc',
+              border: '1px solid #edf2f7',
+              borderRadius: '18px',
+              padding: '14px 16px',
+              marginBottom: '20px',
+              boxSizing: 'border-box'
+            }}>
+              <p style={{
+                fontSize: '13px',
+                color: '#334155',
+                lineHeight: '1.55',
+                margin: 0,
+                fontWeight: '500',
+                fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
+              }}>
+                {selectedNotif.message}
+              </p>
+            </div>
+
+            {/* Confirm / Close Button */}
+            <button
+              onClick={() => setSelectedNotif(null)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: '800',
+                fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(22, 163, 74, 0.3)'
+              }}
+            >
+              ঠিক আছে
+            </button>
+          </div>
         </div>
       )}
     </div>
