@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { X } from 'lucide-react';
+import { X, Flame, Sparkles, Check } from 'lucide-react';
 import cigaretteIcon from '../assets/cigarette-icon.png';
 
 export const DailyLoginModal = () => {
