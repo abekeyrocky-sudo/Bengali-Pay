@@ -27,27 +27,27 @@ export const GameScreen = () => {
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [boardPressed, setBoardPressed] = useState(false);
 
-  // 8 segments matching the user's slot price list
+  // 8 segments with opposite pairing (sojasoji layout: 10৳ vs 10৳, 20৳ vs 20৳, 50৳ vs 50৳, 50 Token vs 100 Token)
   const segments = [
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
     { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#ec4899', textColor: '#831843' },
-    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#3b82f6', textColor: '#1e3a8a' },
     { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#a855f7', textColor: '#581c87' },
-    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#6366f1', textColor: '#312e81' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#3b82f6', textColor: '#1e3a8a' },
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
     { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#f97316', textColor: '#7c2d12' },
+    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#6366f1', textColor: '#312e81' },
     { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#eab308', textColor: '#713f12' },
   ];
 
   const segAngle = 360 / segments.length;
 
   // Weighted winning index:
-  // - 50 & 100 cigarette tokens: 0% chance
-  // - 10৳: High chance (70% total: 35% on slot 0, 35% on slot 5)
-  // - 20৳: Medium chance (22% total: 11% on slot 1, 11% on slot 6)
-  // - 50৳: Low chance (8% total: 4% on slot 2, 4% on slot 7)
+  // - 50 & 100 cigarette tokens: 0% chance (Slot 2 & Slot 6)
+  // - 10৳: High chance (70% total: 35% on slot 0, 35% on slot 4)
+  // - 20৳: Medium chance (22% total: 11% on slot 1, 11% on slot 5)
+  // - 50৳: Low chance (8% total: 4% on slot 3, 4% on slot 7)
   const getWeightedWinningIndex = () => {
-    const weights = [35, 11, 4, 0, 0, 35, 11, 4];
+    const weights = [35, 11, 0, 4, 35, 11, 0, 4];
     const totalWeight = weights.reduce((a, b) => a + b, 0);
     const rand = Math.random() * totalWeight;
     let accumulated = 0;
