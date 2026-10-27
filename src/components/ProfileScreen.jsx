@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EmptyState } from './EmptyState';
 import { useApp } from '../context/AppContext';
+import profilePageImg from '../assets/profile-page-img.jpg';
 import { 
   Settings, 
   CheckSquare, 
@@ -271,49 +272,30 @@ export const ProfileScreen = () => {
         ))}
       </div>
 
-      {/* Bottom Cheerful Banner: "ভালো কিছু সবার জন্য আসছে... ❤️" */}
-      <div style={{
-        background: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)',
-        borderRadius: '20px',
-        padding: '14px 18px',
-        border: '1.5px solid #fecdd3',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 'auto'
-      }}>
-        <div style={{
-          width: '54px',
-          height: '54px',
-          borderRadius: '50%',
+      {/* Bottom Promo Banner: profile-page-img.jpg */}
+      <div 
+        style={{
+          borderRadius: '20px',
           overflow: 'hidden',
-          border: '2px solid #fda4af',
-          flexShrink: 0
-        }}>
-          <img 
-            src="/assets/mascot_boy.jpg" 
-            alt="Cartoon Boy" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-          />
-        </div>
-
-        <div style={{ flex: 1, paddingLeft: '12px' }}>
-          <h4 style={{
-            fontSize: '14px',
-            fontWeight: '800',
-            color: '#be123c',
-            fontFamily: "'Noto Serif Bengali', serif"
-          }}>
-            ভালো কিছু সবার জন্য আসছে... ❤️
-          </h4>
-          <p style={{
-            fontSize: '11px',
-            color: '#e11d48',
-            marginTop: '2px'
-          }}>
-            নতুন মেগা টুর্নামেন্ট ও উইকলি জ্যাকপট শীঘ্রই!
-          </p>
-        </div>
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
+          lineHeight: 0,
+          marginTop: 'auto',
+          cursor: 'pointer',
+          transition: 'transform 0.15s ease'
+        }}
+        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        <img 
+          src={profilePageImg} 
+          alt="Profile Banner" 
+          style={{ 
+            width: '100%', 
+            height: 'auto', 
+            display: 'block',
+            objectFit: 'cover'
+          }} 
+        />
       </div>
 
       {/* Withdraw History Modal */}
