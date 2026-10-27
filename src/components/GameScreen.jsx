@@ -319,40 +319,43 @@ export const GameScreen = () => {
                         {/* Number Amount */}
                         <text
                           x={tx}
-                          y={ty - 3.4}
+                          y={ty - 5.2}
                           fill="#ffffff"
-                          fontSize="6.2"
+                          fontSize="6.6"
                           fontWeight="900"
                           fontFamily="'Outfit', sans-serif"
                           textAnchor="middle"
                           dominantBaseline="central"
-                          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}
+                          style={{ 
+                            textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 2px 5px rgba(0,0,0,0.6)',
+                            letterSpacing: '0.2px'
+                          }}
                         >
                           {seg.amount}
                         </text>
 
-                        {/* 3D Icon */}
+                        {/* 3D Icon (Much larger & prominent) */}
                         {seg.isToken ? (
                           <image
                             href={cigaretteIcon}
                             xlinkHref={cigaretteIcon}
-                            x={tx - 4}
-                            y={ty + 0.3}
-                            width="8"
-                            height="8"
+                            x={tx - 6}
+                            y={ty - 1.2}
+                            width="12"
+                            height="12"
                             preserveAspectRatio="xMidYMid meet"
-                            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
                           />
                         ) : (
                           <image
                             href={takaNoteIcon}
                             xlinkHref={takaNoteIcon}
-                            x={tx - 4.5}
-                            y={ty + 0.5}
-                            width="9"
-                            height="7"
+                            x={tx - 7}
+                            y={ty - 0.8}
+                            width="14"
+                            height="10.5"
                             preserveAspectRatio="xMidYMid meet"
-                            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
                           />
                         )}
                       </g>
