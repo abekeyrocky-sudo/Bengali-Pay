@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Volume2, VolumeX, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, HelpCircle, CheckCircle2 } from 'lucide-react';
 import gamePageBg from '../assets/game-page-bg.png';
 import cigaretteIcon from '../assets/cigarette-icon.png';
 import takaNoteIcon from '../assets/৳-currency-note-icon.png';
@@ -464,7 +464,9 @@ export const GameScreen = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.85)',
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
           zIndex: 300,
           display: 'flex',
           alignItems: 'center',
@@ -472,55 +474,48 @@ export const GameScreen = () => {
           padding: '20px'
         }}>
           <div style={{
+            position: 'relative',
             width: '100%',
             maxWidth: '320px',
-            background: 'linear-gradient(135deg, #fef9c3 0%, #ffffff 100%)',
-            borderRadius: '28px',
-            padding: '28px 20px',
+            background: '#ffffff',
+            borderRadius: '26px',
+            padding: '26px 20px',
             textAlign: 'center',
-            border: '3px solid #eab308',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+            boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
+            border: '1px solid rgba(0,0,0,0.06)'
           }}>
-            <div className="bounce-coin" style={{
-              width: '74px',
-              height: '74px',
+            {/* Success Checkmark Circle (Matching other popups) */}
+            <div style={{
+              width: '68px',
+              height: '68px',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, #fef08a 0%, #eab308 100%)',
-              margin: '0 auto 14px',
+              background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '3px solid #fff',
-              boxShadow: '0 6px 20px rgba(234, 179, 8, 0.5)'
+              margin: '0 auto 16px',
+              border: '4px solid #ffffff',
+              boxShadow: '0 8px 22px rgba(16, 185, 129, 0.25)'
             }}>
-              <img 
-                src={winPrize.isToken ? cigaretteIcon : takaNoteIcon} 
-                alt={winPrize.label} 
-                style={{
-                  width: winPrize.isToken ? '44px' : '48px',
-                  height: winPrize.isToken ? '44px' : '36px',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))'
-                }}
-              />
+              <CheckCircle2 size={36} color="#059669" strokeWidth={2.5} />
             </div>
 
             <h3 style={{
-              fontSize: '24px',
+              fontSize: '22px',
               fontWeight: '900',
-              color: '#854d0e',
+              color: '#0f172a',
               fontFamily: "'Noto Serif Bengali', serif"
             }}>
-              অভিনন্দন! 🎉
+              অভিনন্দন
             </h3>
             <p style={{
-              fontSize: '18px',
+              fontSize: '17px',
               fontWeight: '800',
-              color: '#15803d',
+              color: '#16a34a',
               marginTop: '6px',
               fontFamily: "'Noto Serif Bengali', serif"
             }}>
-              আপনি জিতেছেন {winPrize.label}!
+              আপনি জিতেছেন {winPrize.label}
             </p>
             <p style={{
               fontSize: '12px',
@@ -537,13 +532,14 @@ export const GameScreen = () => {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
                 border: 'none',
                 borderRadius: '16px',
                 color: '#fff',
                 fontSize: '16px',
                 fontWeight: '800',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                boxShadow: '0 8px 20px rgba(22, 163, 74, 0.35)'
               }}
             >
               চালিয়ে যান
