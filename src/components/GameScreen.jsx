@@ -28,15 +28,16 @@ export const GameScreen = () => {
   const [boardPressed, setBoardPressed] = useState(false);
 
   // 8 segments with opposite pairing (sojasoji layout: 10৳ vs 10৳, 20৳ vs 20৳, 50৳ vs 50৳, 50 Token vs 100 Token)
+  // Pairwise color harmony matching screen landscape (Green, Blue, Purple, Gold)
   const segments = [
-    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
-    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#ec4899', textColor: '#831843' },
-    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#a855f7', textColor: '#581c87' },
-    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#3b82f6', textColor: '#1e3a8a' },
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
-    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#f97316', textColor: '#7c2d12' },
-    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#6366f1', textColor: '#312e81' },
-    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#eab308', textColor: '#713f12' },
+    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#0284c7', textColor: '#0c4a6e' },
+    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#7c3aed', textColor: '#4c1d95' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
+    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
+    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#0284c7', textColor: '#0c4a6e' },
+    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#7c3aed', textColor: '#4c1d95' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
   ];
 
   const segAngle = 360 / segments.length;
