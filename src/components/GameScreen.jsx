@@ -4,6 +4,8 @@ import { sounds } from '../utils/audio';
 import confetti from 'canvas-confetti';
 import { ArrowLeft, Volume2, VolumeX, HelpCircle } from 'lucide-react';
 import gamePageBg from '../assets/game-page-bg.png';
+import cigaretteIcon from '../assets/cigarette-icon.png';
+import takaNoteIcon from '../assets/৳-currency-note-icon.png';
 
 export const GameScreen = () => {
   const { 
@@ -27,14 +29,14 @@ export const GameScreen = () => {
 
   // 8 segments matching the user's slot price list
   const segments = [
-    { label: '10৳', displayAmount: '10৳', value: 10, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
-    { label: '20৳', displayAmount: '20৳', value: 20, type: 'taka', isToken: false, color: '#ec4899', textColor: '#831843' },
-    { label: '50৳', displayAmount: '50৳', value: 50, type: 'taka', isToken: false, color: '#3b82f6', textColor: '#1e3a8a' },
-    { label: '50 Cigarette Token', displayAmount: '50', isToken: true, value: 50, type: 'token', color: '#a855f7', textColor: '#581c87' },
-    { label: '100 Cigarette Token', displayAmount: '100', isToken: true, value: 100, type: 'token', color: '#6366f1', textColor: '#312e81' },
-    { label: '10৳', displayAmount: '10৳', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
-    { label: '20৳', displayAmount: '20৳', value: 20, type: 'taka', isToken: false, color: '#f97316', textColor: '#7c2d12' },
-    { label: '50৳', displayAmount: '50৳', value: 50, type: 'taka', isToken: false, color: '#eab308', textColor: '#713f12' },
+    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
+    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#ec4899', textColor: '#831843' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#3b82f6', textColor: '#1e3a8a' },
+    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#a855f7', textColor: '#581c87' },
+    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#6366f1', textColor: '#312e81' },
+    { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
+    { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#f97316', textColor: '#7c2d12' },
+    { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#eab308', textColor: '#713f12' },
   ];
 
   const segAngle = 360 / segments.length;
@@ -301,6 +303,7 @@ export const GameScreen = () => {
                   const midRad = ((startAngle + endAngle) / 2 - 90) * (Math.PI / 180);
                   const tx = 50 + 32 * Math.cos(midRad);
                   const ty = 50 + 32 * Math.sin(midRad);
+                  const midAngle = (startAngle + endAngle) / 2;
 
                   return (
                     <g key={i}>
@@ -310,37 +313,49 @@ export const GameScreen = () => {
                         stroke="#ffffff"
                         strokeWidth="0.8"
                       />
-                      {seg.isToken ? (
+
+                      {/* Slot Content: Amount on top, 3D Icon on bottom (replacing ৳ and টোকেন text) */}
+                      <g transform={`rotate(${midAngle}, ${tx}, ${ty})`}>
+                        {/* Number Amount */}
                         <text
                           x={tx}
-                          y={ty}
+                          y={ty - 3.4}
                           fill="#ffffff"
+                          fontSize="6.2"
                           fontWeight="900"
                           fontFamily="'Outfit', sans-serif"
                           textAnchor="middle"
                           dominantBaseline="central"
-                          transform={`rotate(${(startAngle + endAngle) / 2}, ${tx}, ${ty})`}
-                          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}
                         >
-                          <tspan x={tx} dy="-2.2" fontSize="5.2">{seg.displayAmount}</tspan>
-                          <tspan x={tx} dy="4.5" fontSize="3.1" fontFamily="'Noto Serif Bengali', serif">টোকেন</tspan>
+                          {seg.amount}
                         </text>
-                      ) : (
-                        <text
-                          x={tx}
-                          y={ty}
-                          fill="#ffffff"
-                          fontSize="6.2"
-                          fontWeight="900"
-                          fontFamily="'Outfit', 'Noto Serif Bengali', sans-serif"
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          transform={`rotate(${(startAngle + endAngle) / 2}, ${tx}, ${ty})`}
-                          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
-                        >
-                          {seg.label}
-                        </text>
-                      )}
+
+                        {/* 3D Icon */}
+                        {seg.isToken ? (
+                          <image
+                            href={cigaretteIcon}
+                            xlinkHref={cigaretteIcon}
+                            x={tx - 4}
+                            y={ty + 0.3}
+                            width="8"
+                            height="8"
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                          />
+                        ) : (
+                          <image
+                            href={takaNoteIcon}
+                            xlinkHref={takaNoteIcon}
+                            x={tx - 4.5}
+                            y={ty + 0.5}
+                            width="9"
+                            height="7"
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                          />
+                        )}
+                      </g>
                     </g>
                   );
                 })}
@@ -466,18 +481,24 @@ export const GameScreen = () => {
               width: '74px',
               height: '74px',
               borderRadius: '50%',
-              background: '#eab308',
+              background: 'radial-gradient(circle, #fef08a 0%, #eab308 100%)',
               margin: '0 auto 14px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '36px',
-              fontWeight: '900',
-              color: '#713f12',
               border: '3px solid #fff',
               boxShadow: '0 6px 20px rgba(234, 179, 8, 0.5)'
             }}>
-              ৳
+              <img 
+                src={winPrize.isToken ? cigaretteIcon : takaNoteIcon} 
+                alt={winPrize.label} 
+                style={{
+                  width: winPrize.isToken ? '44px' : '48px',
+                  height: winPrize.isToken ? '44px' : '36px',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))'
+                }}
+              />
             </div>
 
             <h3 style={{
