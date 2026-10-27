@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { X } from 'lucide-react';
 import cigaretteIcon from '../assets/cigarette-icon.png';
+import takaNoteIcon from '../assets/৳-currency-note-icon.png';
 
 export const DailyLoginModal = () => {
   const { 
@@ -291,23 +292,17 @@ export const DailyLoginModal = () => {
                       </div>
                     </div>
                   ) : (
-                    <div style={{
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '50%',
-                      background: 'radial-gradient(circle at 35% 35%, #fef08a 0%, #eab308 70%, #ca8a04 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#ffffff',
-                      fontWeight: '900',
-                      fontSize: '13px',
-                      fontFamily: "'Noto Serif Bengali', serif",
-                      boxShadow: '0 2px 6px rgba(234, 179, 8, 0.3)',
-                      margin: '2px 0'
-                    }}>
-                      ৳
-                    </div>
+                    <img 
+                      src={takaNoteIcon} 
+                      alt="Taka Reward" 
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        objectFit: 'contain',
+                        margin: '2px 0',
+                        filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12))'
+                      }}
+                    />
                   )}
 
                   {/* Reward Amount Label */}
