@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, isLegacyDummyNotification } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import { 
   ArrowLeft, 
@@ -37,11 +37,13 @@ export const NotificationsScreen = () => {
     { id: 'offers', label: 'অফার', icon: Star }
   ];
 
-  // Filter notifications by active tab
-  const filteredNotifications = notifications.filter(item => {
-    if (activeTab === 'all') return true;
-    return item.category === activeTab;
-  });
+  // Filter notifications by active tab and exclude legacy dummy items
+  const filteredNotifications = notifications
+    .filter(n => !isLegacyDummyNotification(n))
+    .filter(item => {
+      if (activeTab === 'all') return true;
+      return item.category === activeTab;
+    });
 
   const handleCardClick = (notif) => {
     sounds.playClick();

@@ -6,6 +6,17 @@ import { getTelegramUser, getTelegramStartParam } from '../utils/telegram';
 
 const AppContext = createContext();
 
+export const isLegacyDummyNotification = (n) => {
+  if (!n) return true;
+  const id = String(n.id || '');
+  if (['notif_1', 'notif_2', 'notif_3', 'notif_4', 'notif_5', 'notif_6'].includes(id)) return true;
+  const title = String(n.title || '').trim();
+  if (['Withdraw Requested!', 'Reward Received!', 'Big Update!', 'Withdraw Successful!', 'Special Offer!', 'Referral Bonus!', 'System Message', 'New Notification'].includes(title)) return true;
+  const message = String(n.message || '');
+  if (message.includes('BKASH') || message.includes('daily reward') || message.includes('spin wheel') || message.includes('has been approved') || message.includes('inviting more friends') || message.includes('Thanks for being with us')) return true;
+  return false;
+};
+
 export const AppProvider = ({ children }) => {
   const [userId] = useState(() => getUserId());
   const isLoaded = useRef(false);
@@ -103,6 +114,8 @@ export const AppProvider = ({ children }) => {
   // Real Transactions list (starts clean from DB)
   const [transactions, setTransactions] = useState([]);
 
+
+
   // Notifications State (Clean real notifications, empty by default, synced with Firestore)
   const [notifications, setNotifications] = useState(() => {
     try {
@@ -110,22 +123,7 @@ export const AppProvider = ({ children }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Filter out legacy dummy English mock notifications
-          const clean = parsed.filter(n => 
-            !n.id?.startsWith('notif_1') && 
-            !n.id?.startsWith('notif_2') && 
-            !n.id?.startsWith('notif_3') && 
-            !n.id?.startsWith('notif_4') && 
-            !n.id?.startsWith('notif_5') && 
-            !n.id?.startsWith('notif_6') &&
-            n.title !== 'Withdraw Requested!' &&
-            n.title !== 'Reward Received!' &&
-            n.title !== 'Big Update!' &&
-            n.title !== 'Withdraw Successful!' &&
-            n.title !== 'Special Offer!' &&
-            n.title !== 'Referral Bonus!' &&
-            n.title !== 'System Message'
-          );
+          const clean = parsed.filter(n => !isLegacyDummyNotification(n));
           return clean;
         }
       }
@@ -133,7 +131,7 @@ export const AppProvider = ({ children }) => {
     return [];
   });
 
-  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+  const unreadNotificationsCount = notifications.filter(n => !isLegacyDummyNotification(n) && !n.read).length;
 
   const markNotificationAsRead = (id) => {
     setNotifications(prev => {
@@ -248,11 +246,13 @@ export const AppProvider = ({ children }) => {
           }
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
           if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
-          if (Array.isArray(remoteData.notifications) && remoteData.notifications.length > 0) {
-            setNotifications(remoteData.notifications);
-            localStorage.setItem('bp_notifications', JSON.stringify(remoteData.notifications));
-          } else if (remoteData && !remoteData.notifications) {
-            saveUserToFirestore(userId, { notifications: DEFAULT_NOTIFICATIONS });
+          if (Array.isArray(remoteData.notifications)) {
+            const clean = remoteData.notifications.filter(n => !isLegacyDummyNotification(n));
+            setNotifications(clean);
+            localStorage.setItem('bp_notifications', JSON.stringify(clean));
+            if (clean.length !== remoteData.notifications.length) {
+              saveUserToFirestore(userId, { notifications: clean });
+            }
           }
 
           // Restore Telegram metadata if previously tracked in Firestore
