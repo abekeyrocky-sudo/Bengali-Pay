@@ -25,19 +25,38 @@ export const GameScreen = () => {
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [boardPressed, setBoardPressed] = useState(false);
 
-  // 8 segments with prizes and colors matching the mockup
+  // 8 segments matching the user's slot price list
   const segments = [
-    { label: '৳ ১', value: 1, color: '#f59e0b', textColor: '#78350f' },
-    { label: '৳ ২', value: 2, color: '#ec4899', textColor: '#831843' },
-    { label: '৳ ৩', value: 3, color: '#3b82f6', textColor: '#1e3a8a' },
-    { label: '৳ ১', value: 1, color: '#10b981', textColor: '#064e3b' },
-    { label: '৳ ২', value: 2, color: '#f97316', textColor: '#7c2d12' },
-    { label: '৳ ৩', value: 3, color: '#8b5cf6', textColor: '#4c1d95' },
-    { label: '৳ ১', value: 1, color: '#eab308', textColor: '#713f12' },
-    { label: '৳ ২', value: 2, color: '#14b8a6', textColor: '#134e4a' },
+    { label: '10৳', displayAmount: '10৳', value: 10, type: 'taka', isToken: false, color: '#f59e0b', textColor: '#78350f' },
+    { label: '20৳', displayAmount: '20৳', value: 20, type: 'taka', isToken: false, color: '#ec4899', textColor: '#831843' },
+    { label: '50৳', displayAmount: '50৳', value: 50, type: 'taka', isToken: false, color: '#3b82f6', textColor: '#1e3a8a' },
+    { label: '50 Cigarette Token', displayAmount: '50', isToken: true, value: 50, type: 'token', color: '#a855f7', textColor: '#581c87' },
+    { label: '100 Cigarette Token', displayAmount: '100', isToken: true, value: 100, type: 'token', color: '#6366f1', textColor: '#312e81' },
+    { label: '10৳', displayAmount: '10৳', value: 10, type: 'taka', isToken: false, color: '#10b981', textColor: '#064e3b' },
+    { label: '20৳', displayAmount: '20৳', value: 20, type: 'taka', isToken: false, color: '#f97316', textColor: '#7c2d12' },
+    { label: '50৳', displayAmount: '50৳', value: 50, type: 'taka', isToken: false, color: '#eab308', textColor: '#713f12' },
   ];
 
   const segAngle = 360 / segments.length;
+
+  // Weighted winning index:
+  // - 50 & 100 cigarette tokens: 0% chance
+  // - 10৳: High chance (70% total: 35% on slot 0, 35% on slot 5)
+  // - 20৳: Medium chance (22% total: 11% on slot 1, 11% on slot 6)
+  // - 50৳: Low chance (8% total: 4% on slot 2, 4% on slot 7)
+  const getWeightedWinningIndex = () => {
+    const weights = [35, 11, 4, 0, 0, 35, 11, 4];
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    const rand = Math.random() * totalWeight;
+    let accumulated = 0;
+    for (let i = 0; i < weights.length; i++) {
+      accumulated += weights[i];
+      if (rand < accumulated) {
+        return i;
+      }
+    }
+    return 0;
+  };
 
   const spinWheel = () => {
     if (spinning) return;
@@ -58,15 +77,16 @@ export const GameScreen = () => {
     setWinPrize(null);
     sounds.playClick();
 
-    // Pick a winning index
-    const winningIndex = Math.floor(Math.random() * segments.length);
+    // Pick a winning index according to weighted probabilities
+    const winningIndex = getWeightedWinningIndex();
     const prize = segments[winningIndex];
 
-    // Compute rotation: At top pointer (270 deg or 0 deg), segment index needs to align
-    // 5 to 8 full rotations + offset
+    // Compute rotation with exact landing under top needle pointer
     const fullRounds = 5 + Math.floor(Math.random() * 3);
+    const currentRotMod = rotation % 360;
     const targetOffset = 360 - (winningIndex * segAngle + segAngle / 2);
-    const finalRotation = rotation + (fullRounds * 360) + targetOffset;
+    const diff = (targetOffset - currentRotMod + 360) % 360;
+    const finalRotation = rotation + (fullRounds * 360) + diff;
 
     setRotation(finalRotation);
 
@@ -78,13 +98,33 @@ export const GameScreen = () => {
       if (tickCount > 24) clearInterval(tickInterval);
     }, 120);
 
-    // Stop after spin duration (4 seconds)
+    // Stop after spin duration (4.2 seconds)
     setTimeout(() => {
       clearInterval(tickInterval);
       setSpinning(false);
       setSpinsLeft(prev => Math.max(0, prev - 1));
       setWinPrize(prize);
-      earnReward(prize.value, 1, `স্পিন হুইল পুরস্কার (${prize.label})`);
+      sounds.playWin();
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.55 }
+      });
+
+      if (prize.type === 'taka') {
+        earnReward(prize.value, 0, `স্পিন হুইল পুরস্কার (${prize.label})`);
+      } else {
+        earnReward(0, prize.value, `স্পিন হুইল পুরস্কার (${prize.label})`);
+      }
+
+      if (typeof addNotification === 'function') {
+        addNotification({
+          category: 'rewards',
+          type: 'reward',
+          title: 'স্পিন পুরস্কার! 🎉',
+          message: `স্পিন করে আপনি ${prize.label} জিতে নিয়েছেন!`
+        });
+      }
     }, 4200);
   };
 
@@ -270,20 +310,37 @@ export const GameScreen = () => {
                         stroke="#ffffff"
                         strokeWidth="0.8"
                       />
-                      <text
-                        x={tx}
-                        y={ty}
-                        fill="#ffffff"
-                        fontSize="6.5"
-                        fontWeight="bold"
-                        fontFamily="'Noto Serif Bengali', serif"
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        transform={`rotate(${(startAngle + endAngle) / 2}, ${tx}, ${ty})`}
-                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
-                      >
-                        {seg.label}
-                      </text>
+                      {seg.isToken ? (
+                        <text
+                          x={tx}
+                          y={ty}
+                          fill="#ffffff"
+                          fontWeight="900"
+                          fontFamily="'Outfit', sans-serif"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          transform={`rotate(${(startAngle + endAngle) / 2}, ${tx}, ${ty})`}
+                          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                        >
+                          <tspan x={tx} dy="-2.2" fontSize="5.2">{seg.displayAmount}</tspan>
+                          <tspan x={tx} dy="4.5" fontSize="3.1" fontFamily="'Noto Serif Bengali', serif">টোকেন</tspan>
+                        </text>
+                      ) : (
+                        <text
+                          x={tx}
+                          y={ty}
+                          fill="#ffffff"
+                          fontSize="6.2"
+                          fontWeight="900"
+                          fontFamily="'Outfit', 'Noto Serif Bengali', sans-serif"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          transform={`rotate(${(startAngle + endAngle) / 2}, ${tx}, ${ty})`}
+                          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                        >
+                          {seg.label}
+                        </text>
+                      )}
                     </g>
                   );
                 })}
@@ -435,15 +492,17 @@ export const GameScreen = () => {
               fontSize: '18px',
               fontWeight: '800',
               color: '#15803d',
-              marginTop: '6px'
+              marginTop: '6px',
+              fontFamily: "'Noto Serif Bengali', serif"
             }}>
-              আপনি জিতেছেন {winPrize.label} ও ১টি টোকেন!
+              আপনি জিতেছেন {winPrize.label}!
             </p>
             <p style={{
               fontSize: '12px',
               color: '#64748b',
               marginTop: '4px',
-              marginBottom: '20px'
+              marginBottom: '20px',
+              fontFamily: "'Noto Serif Bengali', serif"
             }}>
               আপনার ব্যালেন্সে সরাসরি যোগ করা হয়েছে।
             </p>
@@ -496,11 +555,12 @@ export const GameScreen = () => {
               fontSize: '13px',
               color: '#475569',
               margin: '14px 0',
-              lineHeight: '1.6'
+              lineHeight: '1.6',
+              fontFamily: "'Noto Serif Bengali', serif"
             }}>
               <p>১. দৈনিক ৩টি ফ্রি স্পিন দেওয়া হয়।</p>
-              <p>২. প্রতিটি স্পিনে ৳১ থেকে ৳৩ পর্যন্ত নগদ টাকা ও টোকেন জেতার সুযোগ রয়েছে।</p>
-              <p>৩. অতিরিক্ত স্পিন পেতে টাস্ক সেকশন থেকে ভিডিও দেখুন।</p>
+              <p>২. প্রতিটি স্পিনে ১০৳, ২০৳ ও ৫০৳ পর্যন্ত নগদ টাকা জেতার আকর্ষণীয় সুযোগ রয়েছে।</p>
+              <p>৩. অতিরিক্ত স্পিন পেতে টাস্ক সেকশন থেকে টাস্ক সম্পন্ন করুন।</p>
             </div>
             <button
               onClick={() => setShowRuleModal(false)}
