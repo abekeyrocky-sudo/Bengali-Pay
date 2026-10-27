@@ -43,7 +43,7 @@ export const ProfileScreen = () => {
 
   return (
     <div style={{
-      padding: '16px 18px',
+      padding: '16px 18px 24px',
       display: 'flex',
       flexDirection: 'column',
       gap: '16px',
@@ -279,7 +279,7 @@ export const ProfileScreen = () => {
           overflow: 'hidden',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
           lineHeight: 0,
-          marginTop: 'auto',
+          marginTop: '10px',
           cursor: 'pointer',
           transition: 'transform 0.15s ease'
         }}

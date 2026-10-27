@@ -128,8 +128,10 @@ body {
   flex-direction: column;
   background: var(--screen-bg, #f8fafc);
   padding-top: var(--app-top-safe-gap, 56px);
-  padding-bottom: 20px;
+  padding-bottom: 24px;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 /* Splash Screen Body override */
