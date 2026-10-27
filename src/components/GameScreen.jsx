@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Volume2, VolumeX, HelpCircle, Sparkles, RefreshCw, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Volume2, VolumeX, HelpCircle } from 'lucide-react';
 import gamePageBg from '../assets/game-page-bg.png';
 
 export const GameScreen = () => {
@@ -24,79 +24,6 @@ export const GameScreen = () => {
   const [winPrize, setWinPrize] = useState(null);
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [boardPressed, setBoardPressed] = useState(false);
-
-  // Sponsored Ad Campaigns
-  const adBanners = [
-    {
-      id: 'ad_bkash',
-      tag: 'Ad',
-      icon: '🎁',
-      title: 'bKash ক্যাশব্যাক অফার!',
-      subtitle: 'বিজ্ঞাপনে ক্লিক করে ফ্রি স্পিন ও টোকেন নিন',
-      cta: 'Claim',
-      theme: 'linear-gradient(135deg, #be185d 0%, #831843 100%)',
-      glow: 'rgba(219, 39, 119, 0.4)'
-    },
-    {
-      id: 'ad_daraz',
-      tag: 'Ad',
-      icon: '⚡',
-      title: 'Daraz ধামাকা ক্যাম্পেইন!',
-      subtitle: 'সেরা ডিসকাউন্টে শপিং করুন ও রিওয়ার্ড জিতুন',
-      cta: 'Install',
-      theme: 'linear-gradient(135deg, #c2410c 0%, #9a3412 100%)',
-      glow: 'rgba(194, 65, 12, 0.4)'
-    },
-    {
-      id: 'ad_spin',
-      tag: 'Ad',
-      icon: '🎰',
-      title: 'মেগা স্পিন বোনাস!',
-      subtitle: 'স্পনসর অফার দেখুন ও বাড়তি স্পিন জিতে নিন',
-      cta: 'Bonus',
-      theme: 'linear-gradient(135deg, #1e3a8a 0%, #172554 100%)',
-      glow: 'rgba(30, 58, 138, 0.4)'
-    }
-  ];
-
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentAdIndex(prev => (prev + 1) % adBanners.length);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [adBanners.length]);
-
-  const activeAd = adBanners[currentAdIndex];
-
-  const handleAdClick = () => {
-    sounds.playWin();
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.25 }
-    });
-
-    setSpinsLeft(prev => prev + 1);
-    if (typeof earnReward === 'function') {
-      earnReward(0, 1, 'Top Banner Ad Reward');
-    }
-    if (typeof notifySuccess === 'function') {
-      notifySuccess(
-        'ফ্রি স্পিন বোনাস সফল! 🎁',
-        'বিজ্ঞাপনে অংশ নেওয়ায় আপনাকে +১টি অতিরিক্ত ফ্রি স্পিন ও +১টি টোকেন দেওয়া হয়েছে!'
-      );
-    }
-    if (typeof addNotification === 'function') {
-      addNotification({
-        category: 'offers',
-        type: 'offer',
-        title: 'অ্যাড বোনাস সফল! 🎁',
-        message: 'বিজ্ঞাপন দেখার জন্য +১টি ফ্রি স্পিন দেওয়া হয়েছে।'
-      });
-    }
-  };
 
   // 8 segments with prizes and colors matching the mockup
   const segments = [
@@ -191,125 +118,12 @@ export const GameScreen = () => {
       <div style={{
         position: 'relative',
         zIndex: 2,
-        padding: '6px 14px 16px',
+        padding: '12px 14px 16px',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         boxSizing: 'border-box'
       }}>
-        {/* Top Sponsored Ad Banner Card (fills top gap with realistic rewarded ad) */}
-        <div 
-          onClick={handleAdClick}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: '48px',
-            borderRadius: '13px',
-            background: activeAd.theme,
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            boxShadow: `0 3px 12px ${activeAd.glow}, inset 0 1px 0 rgba(255, 255, 255, 0.35)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 10px',
-            marginBottom: '8px',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            boxSizing: 'border-box',
-            flexShrink: 0,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-          title="বিজ্ঞাপনে অংশ নিয়ে ফ্রি স্পিন ও বোনাস পান"
-        >
-          {/* Subtle animated shimmer background */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%)',
-            pointerEvents: 'none'
-          }} />
-
-          {/* Left: Tag + Icon + Title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', zIndex: 2, minWidth: 0, flex: 1 }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '9px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '17px',
-              flexShrink: 0
-            }}>
-              {activeAd.icon}
-            </div>
-
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{
-                  fontSize: '8px',
-                  fontWeight: '900',
-                  color: '#000000',
-                  background: '#facc15',
-                  padding: '1px 4px',
-                  borderRadius: '3px',
-                  lineHeight: 1,
-                  fontFamily: "'Outfit', sans-serif"
-                }}>
-                  {activeAd.tag}
-                </span>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '800',
-                  color: '#ffffff',
-                  fontFamily: "'Outfit', sans-serif",
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {activeAd.title}
-                </span>
-              </div>
-              <p style={{
-                fontSize: '10px',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontWeight: '500',
-                margin: '1px 0 0 0',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
-                {activeAd.subtitle}
-              </p>
-            </div>
-          </div>
-
-          {/* Right: CTA Button */}
-          <div style={{ zIndex: 2, flexShrink: 0, paddingLeft: '6px' }}>
-            <div style={{
-              background: '#ffffff',
-              color: '#0f172a',
-              fontSize: '11px',
-              fontWeight: '900',
-              fontFamily: "'Outfit', sans-serif",
-              padding: '4px 10px',
-              borderRadius: '20px',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '3px'
-            }}>
-              <span>{activeAd.cta}</span>
-              <Sparkles size={10} color="#f59e0b" />
-            </div>
-          </div>
-        </div>
-
         {/* Top Header */}
         <div style={{
           display: 'flex',
