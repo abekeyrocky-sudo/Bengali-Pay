@@ -205,7 +205,7 @@ export const GameScreen = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '10px 0 6px 0'
+          margin: '38px 0 6px 0'
         }}>
           {/* Wheel Pointer Needle (Top) */}
           <div style={{
