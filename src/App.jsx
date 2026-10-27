@@ -12,6 +12,7 @@ import { NotificationsScreen } from './components/NotificationsScreen';
 import { BottomNav } from './components/BottomNav';
 import { ActionModal } from './components/ActionModal';
 import { ChannelGateModal } from './components/ChannelGateModal';
+import { DailyLoginModal } from './components/DailyLoginModal';
 import { initTelegramApp, updateTelegramBackButton } from './utils/telegram';
 
 const screenBgMap = {
@@ -105,6 +106,9 @@ const MainAppContent = () => {
 
         {/* Mandatory Telegram Channel Gate Modal */}
         <ChannelGateModal />
+
+        {/* 14-Day Daily Login Streak Popup Modal */}
+        <DailyLoginModal />
       </div>
     </div>
   );

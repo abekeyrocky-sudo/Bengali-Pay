@@ -27,20 +27,14 @@ export const HomeScreen = () => {
     navigateTo, 
     earnReward,
     dailyClaimed,
-    setDailyClaimed,
-    notifySuccess,
-    notifyWarn,
+    loginStreak = 0,
+    streakStatus = {},
+    setShowDailyLoginModal,
     unreadNotificationsCount = 0
   } = useApp();
 
   const handleDailyCheckin = () => {
-    if (!dailyClaimed) {
-      setDailyClaimed(true);
-      earnReward(5, 5, 'Daily Check-in Bonus');
-      notifySuccess('দৈনিক বোনাস সফল!', '+৫ ৳ ও +৫টি টোকেন আপনার একাউন্টে যোগ হয়েছে!');
-    } else {
-      notifyWarn('ইতিমধ্যে ক্লেইম করেছেন!', 'আজকের ডেইলি বোনাস আপনি ইতিমধ্যে নিয়ে নিয়েছেন। আগামীকাল আবার চেষ্টা করুন!');
-    }
+    setShowDailyLoginModal(true);
   };
 
   return (
@@ -410,32 +404,64 @@ export const HomeScreen = () => {
         </button>
       </div>
 
-      {/* Today's Reward Progress Card (Pixel-Perfect Mockup Match) */}
-      <div style={{
-        background: '#ffffff',
-        borderRadius: '20px',
-        padding: '14px 18px',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-        border: '1px solid #f1f5f9',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '14px'
-      }}>
+      {/* Today's Reward Progress Card (Linked to 14-Day Daily Login Modal) */}
+      <div 
+        onClick={() => setShowDailyLoginModal(true)}
+        style={{
+          background: '#ffffff',
+          borderRadius: '20px',
+          padding: '14px 18px',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+          border: streakStatus?.canClaimToday ? '1.5px solid #fde047' : '1px solid #f1f5f9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '14px',
+          cursor: 'pointer',
+          transition: 'transform 0.15s ease'
+        }}
+        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      >
         {/* Left Side: Title + Progress Row */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h4 style={{
-            fontSize: '13px',
-            fontWeight: '800',
-            color: '#1e293b',
-            fontFamily: "'Outfit', sans-serif",
-            marginBottom: '8px',
-            lineHeight: '1'
-          }}>
-            Today's Reward
-          </h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+            <h4 style={{
+              fontSize: '13.5px',
+              fontWeight: '800',
+              color: '#0f172a',
+              fontFamily: "'Noto Serif Bengali', serif",
+              lineHeight: '1.2',
+              margin: 0
+            }}>
+              দৈনিক লগইন বোনাস
+            </h4>
+            {streakStatus?.canClaimToday && (
+              <span style={{
+                background: '#fef08a',
+                color: '#854d0e',
+                fontSize: '10px',
+                fontWeight: '800',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                fontFamily: "'Noto Serif Bengali', serif"
+              }}>
+                বাকি 🎁
+              </span>
+            )}
+          </div>
 
-          {/* Progress Row: [Small Coin Icon] [=== Progress Bar ===] [2/10] */}
+          <p style={{
+            fontSize: '11px',
+            color: streakStatus?.canClaimToday ? '#ca8a04' : '#16a34a',
+            fontWeight: '700',
+            fontFamily: "'Noto Serif Bengali', serif",
+            margin: '0 0 6px 0'
+          }}>
+            {streakStatus?.canClaimToday ? 'আজকের রিওয়ার্ড ক্লেইম করতে ট্যাপ করুন!' : 'আজকের রিওয়ার্ড সংগৃহীত ✓'}
+          </p>
+
+          {/* Progress Row: [Small Coin Icon] [=== Progress Bar ===] [X/14] */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -469,22 +495,23 @@ export const HomeScreen = () => {
               overflow: 'hidden'
             }}>
               <div style={{
-                width: '20%',
+                width: `${Math.min(100, Math.round(((streakStatus?.canClaimToday ? streakStatus?.activeStreak : loginStreak) / 14) * 100))}%`,
                 height: '100%',
                 background: 'linear-gradient(90deg, #16a34a, #22c55e)',
-                borderRadius: '10px'
+                borderRadius: '10px',
+                transition: 'width 0.3s ease'
               }} />
             </div>
 
-            {/* Counter: 2/10 */}
+            {/* Counter: X/14 */}
             <span style={{
-              fontSize: '12px',
-              fontWeight: '700',
+              fontSize: '11.5px',
+              fontWeight: '800',
               color: '#64748b',
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Outfit', 'Noto Serif Bengali', serif, sans-serif",
               flexShrink: 0
             }}>
-              2/10
+              {streakStatus?.canClaimToday ? streakStatus?.activeStreak : loginStreak}/১৪ দিন
             </span>
           </div>
         </div>

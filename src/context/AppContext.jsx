@@ -17,6 +17,80 @@ export const isLegacyDummyNotification = (n) => {
   return false;
 };
 
+export const DAILY_LOGIN_REWARDS = [
+  { day: 1, type: 'taka', amount: 5, label: '৫৳' },
+  { day: 2, type: 'taka', amount: 15, label: '১৫৳' },
+  { day: 3, type: 'taka', amount: 25, label: '২৫৳' },
+  { day: 4, type: 'taka', amount: 50, label: '৫০৳' },
+  { day: 5, type: 'taka', amount: 100, label: '১০০৳' },
+  { day: 6, type: 'taka', amount: 150, label: '১৫০৳' },
+  { day: 7, type: 'taka', amount: 200, label: '২০০৳' },
+  { day: 8, type: 'taka', amount: 250, label: '২৫০৳' },
+  { day: 9, type: 'taka', amount: 300, label: '৩০০৳' },
+  { day: 10, type: 'taka', amount: 350, label: '৩৫০৳' },
+  { day: 11, type: 'taka', amount: 400, label: '৪০০৳' },
+  { day: 12, type: 'taka', amount: 450, label: '৪৫০৳' },
+  { day: 13, type: 'taka', amount: 500, label: '৫০০৳' },
+  { day: 14, type: 'token', amount: 50, label: '৫০ টোকেন' },
+];
+
+export const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const getDayDifference = (dateStr1, dateStr2) => {
+  if (!dateStr1 || !dateStr2) return 999;
+  const d1 = new Date(dateStr1 + 'T00:00:00');
+  const d2 = new Date(dateStr2 + 'T00:00:00');
+  const diffTime = d2.getTime() - d1.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+};
+
+export const getStreakStatus = (lastDate, streak) => {
+  const today = getLocalDateString();
+  const diff = getDayDifference(lastDate, today);
+
+  if (!lastDate) {
+    return {
+      canClaimToday: true,
+      currentDayToClaim: 1,
+      activeStreak: 0,
+      isStreakReset: false
+    };
+  }
+
+  if (diff === 0) {
+    return {
+      canClaimToday: false,
+      currentDayToClaim: streak || 1,
+      activeStreak: streak || 1,
+      isStreakReset: false
+    };
+  }
+
+  if (diff === 1) {
+    const nextDay = streak >= 14 ? 1 : streak + 1;
+    return {
+      canClaimToday: true,
+      currentDayToClaim: nextDay,
+      activeStreak: streak,
+      isStreakReset: false
+    };
+  }
+
+  // Missed a day! diff > 1 (streak resets back to Day 1)
+  return {
+    canClaimToday: true,
+    currentDayToClaim: 1,
+    activeStreak: 0,
+    isStreakReset: true
+  };
+};
+
 export const AppProvider = ({ children }) => {
   const [userId] = useState(() => getUserId());
   const isLoaded = useRef(false);
@@ -108,8 +182,21 @@ export const AppProvider = ({ children }) => {
     return saved !== null ? parseFloat(saved) : 0;
   });
 
-  // Daily check-in state
-  const [dailyClaimed, setDailyClaimed] = useState(false);
+  // 14-Day Login Streak states
+  const [loginStreak, setLoginStreak] = useState(() => {
+    const saved = localStorage.getItem('bp_login_streak');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const [lastLoginDate, setLastLoginDate] = useState(() => {
+    return localStorage.getItem('bp_last_login_date') || null;
+  });
+
+  const [showDailyLoginModal, setShowDailyLoginModal] = useState(false);
+
+  // Daily check-in state (synced with streak)
+  const streakStatus = getStreakStatus(lastLoginDate, loginStreak);
+  const [dailyClaimed, setDailyClaimed] = useState(!streakStatus.canClaimToday);
 
   // Real Transactions list (starts clean from DB)
   const [transactions, setTransactions] = useState([]);
@@ -236,6 +323,14 @@ export const AppProvider = ({ children }) => {
           if (remoteData.userXp !== undefined) setUserXp(remoteData.userXp);
           if (remoteData.phone !== undefined) setUserPhone(remoteData.phone);
           if (remoteData.dailyClaimed !== undefined) setDailyClaimed(remoteData.dailyClaimed);
+          if (remoteData.loginStreak !== undefined) {
+            setLoginStreak(remoteData.loginStreak);
+            localStorage.setItem('bp_login_streak', String(remoteData.loginStreak));
+          }
+          if (remoteData.lastLoginDate !== undefined) {
+            setLastLoginDate(remoteData.lastLoginDate);
+            localStorage.setItem('bp_last_login_date', remoteData.lastLoginDate);
+          }
           if (remoteData.referralCount !== undefined) {
             setReferralCount(remoteData.referralCount);
             localStorage.setItem('bp_referral_count', String(remoteData.referralCount));
@@ -273,7 +368,9 @@ export const AppProvider = ({ children }) => {
           userLevel: remoteData?.userLevel ?? userLevel,
           userXp: remoteData?.userXp ?? userXp,
           phone: remoteData?.phone ?? userPhone,
-          dailyClaimed: remoteData?.dailyClaimed ?? dailyClaimed
+          dailyClaimed: remoteData?.dailyClaimed ?? dailyClaimed,
+          loginStreak: remoteData?.loginStreak ?? loginStreak,
+          lastLoginDate: remoteData?.lastLoginDate ?? lastLoginDate
         };
         lastSavedJson.current = JSON.stringify(initialPayload);
         isLoaded.current = true;
@@ -319,7 +416,9 @@ export const AppProvider = ({ children }) => {
       userLevel,
       userXp,
       phone: userPhone,
-      dailyClaimed
+      dailyClaimed,
+      loginStreak,
+      lastLoginDate
     };
 
     const currentJson = JSON.stringify(currentPayload);
@@ -344,7 +443,74 @@ export const AppProvider = ({ children }) => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
+  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, loginStreak, lastLoginDate, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
+
+  // Sync dailyClaimed whenever streakStatus changes
+  useEffect(() => {
+    setDailyClaimed(!streakStatus.canClaimToday);
+  }, [streakStatus.canClaimToday]);
+
+  // Auto-trigger daily login popup on app launch if not claimed today
+  useEffect(() => {
+    const today = getLocalDateString();
+    const diff = getDayDifference(lastLoginDate, today);
+    if (diff !== 0) {
+      const timer = setTimeout(() => {
+        setShowDailyLoginModal(true);
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, [lastLoginDate]);
+
+  // Claim Daily Login Reward handler
+  const claimDailyLoginReward = () => {
+    const status = getStreakStatus(lastLoginDate, loginStreak);
+    if (!status.canClaimToday) return false;
+
+    const today = getLocalDateString();
+    const dayToClaim = status.currentDayToClaim;
+    const rewardItem = DAILY_LOGIN_REWARDS.find(r => r.day === dayToClaim) || DAILY_LOGIN_REWARDS[0];
+
+    // Give reward
+    if (rewardItem.type === 'token') {
+      earnReward(0, rewardItem.amount, `১৪ দিনের মেগা স্ট্রিক রিওয়ার্ড (Day ${dayToClaim})`);
+    } else {
+      earnReward(rewardItem.amount, 0, `দৈনিক লগইন রিওয়ার্ড (Day ${dayToClaim})`);
+    }
+
+    sounds.playWin();
+
+    try {
+      confetti({
+        particleCount: 85,
+        spread: 70,
+        origin: { y: 0.5 }
+      });
+    } catch (e) {}
+
+    setLoginStreak(dayToClaim);
+    setLastLoginDate(today);
+    setDailyClaimed(true);
+
+    localStorage.setItem('bp_login_streak', String(dayToClaim));
+    localStorage.setItem('bp_last_login_date', today);
+
+    const rewardText = rewardItem.type === 'token' ? `${rewardItem.amount}টি সিগারেট টোকেন` : `৳${rewardItem.amount}`;
+    addNotification({
+      category: 'rewards',
+      type: 'reward',
+      title: `ডে ${dayToClaim} লগইন বোনাস! 🎁`,
+      message: `আপনি সফলভাবে ডে ${dayToClaim}-এর লগইন রিওয়ার্ড (+${rewardText}) ক্লেইম করেছেন!`
+    });
+
+    saveUserToFirestore(userId, {
+      loginStreak: dayToClaim,
+      lastLoginDate: today,
+      dailyClaimed: true
+    });
+
+    return true;
+  };
 
   // Sound toggle
   const toggleSound = () => {
@@ -459,6 +625,13 @@ export const AppProvider = ({ children }) => {
         setTasks,
         dailyClaimed,
         setDailyClaimed,
+        dailyLoginRewards: DAILY_LOGIN_REWARDS,
+        loginStreak,
+        lastLoginDate,
+        streakStatus,
+        showDailyLoginModal,
+        setShowDailyLoginModal,
+        claimDailyLoginReward,
         earnReward,
         modalConfig,
         showModal,

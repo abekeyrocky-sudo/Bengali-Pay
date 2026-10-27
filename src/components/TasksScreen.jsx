@@ -25,6 +25,7 @@ export const TasksScreen = () => {
     navigateTo, 
     dailyClaimed, 
     setDailyClaimed,
+    setShowDailyLoginModal,
     notifySuccess,
     notifyWarn
   } = useApp();
@@ -65,16 +66,9 @@ export const TasksScreen = () => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: true } : t));
   };
 
-  // Handle Daily check-in
+  // Handle Daily check-in: open 14-day login streak popup
   const handleDailyCheckin = () => {
-    if (!dailyClaimed) {
-      setDailyClaimed(true);
-      earnReward(5, 5, 'Daily Check-in Bonus');
-      markTaskDone('daily');
-      notifySuccess('দৈনিক বোনাস সফল!', '+৫ ৳ ও +৫টি টোকেন আপনার ওয়ালেটে যুক্ত হয়েছে!');
-    } else {
-      notifyWarn('ইতিমধ্যে ক্লেইম করেছেন!', 'আজকের দৈনিক বোনাস আপনি ইতিমধ্যে নিয়ে নিয়েছেন। আগামীকাল আবার চেক করুন!');
-    }
+    setShowDailyLoginModal(true);
   };
 
   // Handle Survey submit
