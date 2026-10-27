@@ -221,10 +221,10 @@ export const NotificationsScreen = () => {
               fontSize: '20px',
               fontWeight: '900',
               color: '#0f172a',
-              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+              fontFamily: "'Outfit', sans-serif",
               lineHeight: 1.15
             }}>
-              নোটিফিকেশন
+              Notifications
             </h1>
             <p style={{
               fontSize: '12px',
