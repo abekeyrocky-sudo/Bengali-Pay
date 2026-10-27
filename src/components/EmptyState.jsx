@@ -62,7 +62,7 @@ export const EmptyState = ({
             fontWeight: '800',
             color: '#0f172a',
             margin: '6px 0 4px 0',
-            fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
+            fontFamily: "'Noto Serif Bengali', serif"
           }}
         >
           {title}
@@ -79,7 +79,7 @@ export const EmptyState = ({
             margin: 0,
             maxWidth: '260px',
             lineHeight: '1.45',
-            fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
+            fontFamily: "'Noto Serif Bengali', serif"
           }}
         >
           {subtitle}
@@ -99,7 +99,7 @@ export const EmptyState = ({
             border: 'none',
             fontSize: '13px',
             fontWeight: '700',
-            fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+            fontFamily: "'Noto Serif Bengali', serif",
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
           }}

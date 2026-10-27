@@ -347,7 +347,7 @@ export const ProfileScreen = () => {
             padding: '20px',
             textAlign: 'center'
           }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '14px', fontFamily: "'Noto Serif Bengali', serif" }}>
               উইথড্র হিস্ট্রি
             </h3>
             <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -385,6 +385,7 @@ export const ProfileScreen = () => {
                 borderRadius: '14px',
                 color: '#fff',
                 fontWeight: '700',
+                fontFamily: "'Noto Serif Bengali', serif",
                 cursor: 'pointer'
               }}
             >
@@ -414,10 +415,10 @@ export const ProfileScreen = () => {
             padding: '20px',
             textAlign: 'center'
           }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '10px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '10px', fontFamily: "'Noto Serif Bengali', serif" }}>
               Bengali Pay হেল্পলাইন
             </h3>
-            <p style={{ fontSize: '13px', color: '#475569', lineHeight: '1.6', marginBottom: '16px' }}>
+            <p style={{ fontSize: '13px', color: '#475569', lineHeight: '1.6', marginBottom: '16px', fontFamily: "'Noto Serif Bengali', serif" }}>
               যেকোনো সমস্যায় আমাদের অফিশিয়াল টেলিগ্রাম চ্যানেল ও ফেসবুক গ্রুপে যুক্ত হোন। ২৪/৭ সাপোর্ট টিম প্রস্তুত আছে।
             </p>
             <div style={{
@@ -427,7 +428,8 @@ export const ProfileScreen = () => {
               fontSize: '13px',
               color: '#15803d',
               fontWeight: '700',
-              marginBottom: '16px'
+              marginBottom: '16px',
+              fontFamily: "'Noto Serif Bengali', serif"
             }}>
               ইমেইল: support@bengalipay.com
             </div>
@@ -441,6 +443,7 @@ export const ProfileScreen = () => {
                 borderRadius: '14px',
                 color: '#fff',
                 fontWeight: '700',
+                fontFamily: "'Noto Serif Bengali', serif",
                 cursor: 'pointer'
               }}
             >
@@ -470,10 +473,10 @@ export const ProfileScreen = () => {
             padding: '20px',
             textAlign: 'center'
           }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '14px', fontFamily: "'Noto Serif Bengali', serif" }}>
               অ্যাপ সেটিংস
             </h3>
-            <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
+            <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', fontFamily: "'Noto Serif Bengali', serif" }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>সাউন্ড এফেক্টস</span>
                 <span style={{ fontWeight: '700', color: '#16a34a' }}>চালু</span>
@@ -498,6 +501,7 @@ export const ProfileScreen = () => {
                 borderRadius: '14px',
                 color: '#fff',
                 fontWeight: '700',
+                fontFamily: "'Noto Serif Bengali', serif",
                 cursor: 'pointer'
               }}
             >

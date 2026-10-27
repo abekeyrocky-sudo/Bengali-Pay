@@ -204,7 +204,7 @@ export const NotificationsScreen = () => {
               color: '#64748b',
               fontWeight: '600',
               marginTop: '2px',
-              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
+              fontFamily: "'Noto Serif Bengali', serif"
             }}>
               নতুন সকল আপডেট ও রিওয়ার্ডের তথ্য!
             </p>
@@ -340,7 +340,7 @@ export const NotificationsScreen = () => {
                   fontSize: '14px',
                   fontWeight: '800',
                   color: '#0f172a',
-                  fontFamily: "'Outfit', sans-serif"
+                  fontFamily: "'Noto Serif Bengali', serif"
                 }}>
                   {notif.title}
                 </div>
@@ -349,7 +349,8 @@ export const NotificationsScreen = () => {
                   color: '#475569',
                   marginTop: '2px',
                   lineHeight: '1.35',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  fontFamily: "'Noto Serif Bengali', serif"
                 }}>
                   {notif.message}
                 </div>
@@ -478,7 +479,7 @@ export const NotificationsScreen = () => {
               fontWeight: '900',
               color: '#0f172a',
               margin: '0 0 8px 0',
-              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+              fontFamily: "'Noto Serif Bengali', serif",
               lineHeight: 1.3
             }}>
               {selectedNotif.title}
@@ -518,7 +519,7 @@ export const NotificationsScreen = () => {
                 lineHeight: '1.55',
                 margin: 0,
                 fontWeight: '500',
-                fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
+                fontFamily: "'Noto Serif Bengali', serif"
               }}>
                 {selectedNotif.message}
               </p>
@@ -536,7 +537,7 @@ export const NotificationsScreen = () => {
                 border: 'none',
                 fontSize: '14px',
                 fontWeight: '800',
-                fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+                fontFamily: "'Noto Serif Bengali', serif",
                 cursor: 'pointer',
                 boxShadow: '0 4px 14px rgba(22, 163, 74, 0.3)'
               }}

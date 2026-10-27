@@ -18,14 +18,17 @@
   --app-bottom-safe-gap: max(0px, var(--tg-content-safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px));
   --app-viewport-height: 100vh;
   --screen-bg: #f8fafc;
+  --font-base: 'Outfit', 'Noto Serif Bengali', serif, sans-serif;
+  --font-bangla: 'Noto Serif Bengali', serif;
 }
 
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  font-family: 'Outfit', 'Noto Serif Bengali', serif, sans-serif;
 }
 
 html, body {
@@ -54,10 +57,13 @@ html, body {
   font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
 }
 
-body {
-  font-family: 'Outfit', 'Noto Serif Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #0f172a;
+body, button, input, select, textarea {
+  font-family: 'Outfit', 'Noto Serif Bengali', serif, sans-serif;
   color: var(--text-dark);
+}
+
+body {
+  background-color: #0f172a;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,7 +184,7 @@ body {
   gap: 2px;
   cursor: pointer;
   color: #94a3b8;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Outfit', 'Noto Serif Bengali', serif, sans-serif;
   font-size: 11px;
   font-weight: 700;
   line-height: 1.1;

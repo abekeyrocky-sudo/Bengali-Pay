@@ -200,7 +200,7 @@ export const ChannelGateModal = () => {
           fontWeight: '900',
           color: '#0f172a',
           margin: '4px 0 16px 0',
-          fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+          fontFamily: "'Noto Serif Bengali', serif",
           letterSpacing: '-0.3px'
         }}>
           বাঙালি পে BD
@@ -256,7 +256,7 @@ export const ChannelGateModal = () => {
             fontWeight: '600',
             textAlign: 'left',
             margin: 0,
-            fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif"
+            fontFamily: "'Noto Serif Bengali', serif"
           }}>
             আপডেট ও গুরুত্বপূর্ণ ঘোষণার জন্য আমাদের <span style={{ color: '#0284c7', fontWeight: '800' }}>টেলিগ্রাম চ্যানেলটি</span> জয়েন করুন।
           </p>
@@ -295,7 +295,7 @@ export const ChannelGateModal = () => {
               color: '#ffffff',
               fontSize: '15px',
               fontWeight: '800',
-              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+              fontFamily: "'Noto Serif Bengali', serif",
               border: 'none',
               cursor: 'pointer',
               display: 'flex',
@@ -340,7 +340,7 @@ export const ChannelGateModal = () => {
               border: hasClickedJoin ? 'none' : '1.5px solid #e2e8f0',
               fontSize: '13.5px',
               fontWeight: '800',
-              fontFamily: "'Outfit', 'Noto Serif Bengali', sans-serif",
+              fontFamily: "'Noto Serif Bengali', serif",
               cursor: isChecking ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',

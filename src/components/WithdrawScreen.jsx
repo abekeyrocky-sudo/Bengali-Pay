@@ -328,7 +328,7 @@ export const WithdrawScreen = () => {
             fontWeight: '800', 
             color: '#dc2626',
             letterSpacing: '0.2px',
-            fontFamily: "'Noto Serif Bengali', 'Outfit', sans-serif"
+            fontFamily: "'Noto Serif Bengali', serif"
           }}>
             {tokens} সিগারেট টোকেন
           </span>
@@ -349,14 +349,14 @@ export const WithdrawScreen = () => {
         overflow: 'hidden'
       }}>
         <div style={{ zIndex: 1 }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: '#854d0e' }}>
+          <span style={{ fontSize: '12px', fontWeight: '700', color: '#854d0e', fontFamily: "'Noto Serif Bengali', serif" }}>
             উইথড্র লিমিট (Withdraw Limit)
           </span>
           <p style={{
             fontSize: '24px',
             fontWeight: '900',
             color: '#15803d',
-            fontFamily: "'Outfit', sans-serif",
+            fontFamily: "'Outfit', 'Noto Serif Bengali', serif, sans-serif",
             lineHeight: '1.2',
             margin: '2px 0'
           }}>
@@ -819,7 +819,7 @@ export const WithdrawScreen = () => {
                     fontSize: '16px',
                     fontWeight: '800',
                     color: '#0f172a',
-                    fontFamily: "'Noto Serif Bengali', 'Outfit', sans-serif",
+                    fontFamily: "'Noto Serif Bengali', serif",
                     lineHeight: '1.2'
                   }}>
                     উত্তোলন ইতিহাস

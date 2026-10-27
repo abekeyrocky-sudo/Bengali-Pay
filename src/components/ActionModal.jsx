@@ -170,7 +170,7 @@ export const ActionModal = () => {
           fontSize: '18px',
           fontWeight: '800',
           color: '#0f172a',
-          fontFamily: "'Noto Serif Bengali', 'Outfit', serif",
+          fontFamily: "'Noto Serif Bengali', serif",
           marginBottom: '8px',
           lineHeight: '1.3'
         }}>
@@ -181,7 +181,7 @@ export const ActionModal = () => {
         <p style={{
           fontSize: '13.5px',
           color: '#475569',
-          fontFamily: "'Noto Serif Bengali', 'Outfit', sans-serif",
+          fontFamily: "'Noto Serif Bengali', serif",
           lineHeight: '1.5',
           marginBottom: '22px',
           fontWeight: '500'
@@ -200,7 +200,7 @@ export const ActionModal = () => {
               color: '#ffffff',
               fontSize: '15px',
               fontWeight: '800',
-              fontFamily: "'Noto Serif Bengali', 'Outfit', sans-serif",
+              fontFamily: "'Noto Serif Bengali', serif",
               borderRadius: '16px',
               border: 'none',
               cursor: 'pointer',
@@ -228,7 +228,7 @@ export const ActionModal = () => {
                 color: '#64748b',
                 fontSize: '14px',
                 fontWeight: '700',
-                fontFamily: "'Noto Serif Bengali', 'Outfit', sans-serif",
+                fontFamily: "'Noto Serif Bengali', serif",
                 borderRadius: '16px',
                 border: '1px solid #e2e8f0',
                 cursor: 'pointer'
