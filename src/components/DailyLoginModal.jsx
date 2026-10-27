@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { X, Check, Lock, Flame, Sparkles } from 'lucide-react';
+import { X } from 'lucide-react';
 import cigaretteIcon from '../assets/cigarette-icon.png';
 
 export const DailyLoginModal = () => {
@@ -285,32 +285,6 @@ export const DailyLoginModal = () => {
                     boxSizing: 'border-box'
                   }}
                 >
-                  {/* Status Indicator Icon (Top-Right Badge) */}
-                  <div style={{
-                    position: isDay14 ? 'static' : 'absolute',
-                    top: '4px',
-                    right: '4px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: isClaimed ? '#16a34a' : (isToday ? '#eab308' : '#cbd5e1'),
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '10px',
-                    fontWeight: '900',
-                    flexShrink: 0
-                  }}>
-                    {isClaimed ? (
-                      <Check size={12} strokeWidth={3} />
-                    ) : isToday ? (
-                      <Sparkles size={11} />
-                    ) : (
-                      <Lock size={10} />
-                    )}
-                  </div>
-
                   {/* Day Label */}
                   <div style={{
                     fontSize: isDay14 ? '13px' : '11px',
