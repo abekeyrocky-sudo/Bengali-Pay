@@ -14,6 +14,7 @@ import { BottomNav } from './components/BottomNav';
 import { ActionModal } from './components/ActionModal';
 import { ChannelGateModal } from './components/ChannelGateModal';
 import { DailyLoginModal } from './components/DailyLoginModal';
+import { AccountQuotaReminderModal } from './components/AccountQuotaReminderModal';
 import { initTelegramApp, updateTelegramBackButton } from './utils/telegram';
 
 const screenBgMap = {
@@ -117,6 +118,9 @@ const MainAppContent = () => {
 
         {/* 14-Day Daily Login Streak Popup Modal */}
         <DailyLoginModal />
+
+        {/* 15s Automatic Daily Quota Reminder Modal */}
+        <AccountQuotaReminderModal />
       </div>
     </div>
   );
