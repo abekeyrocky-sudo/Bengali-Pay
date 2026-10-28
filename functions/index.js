@@ -207,9 +207,19 @@ async function processReferralReward(newUser, referrerParam) {
 
   try {
     const newUserDocRef = db.collection("users").doc(`tg_${newTgId}`);
-    const newUserSnap = await newUserDocRef.get();
 
-    // 2. Prevent duplicate referral: check if new user already completed a referral
+    // 2. Prevent duplicate referral: Check if user was already rewarded in referrals collection
+    const existingRefSnap = await db.collection("referrals")
+      .where("referredUserId", "==", newTgId)
+      .limit(1)
+      .get();
+    if (!existingRefSnap.empty) {
+      logger.info(`User ${newTgId} already exists in referrals collection. Duplicate reward blocked.`);
+      await newUserDocRef.set({ referralCompleted: true }, { merge: true });
+      return { success: false, reason: "already_referred" };
+    }
+
+    const newUserSnap = await newUserDocRef.get();
     if (newUserSnap.exists) {
       const data = newUserSnap.data();
       if (data.referralCompleted) {
@@ -218,13 +228,15 @@ async function processReferralReward(newUser, referrerParam) {
       }
     }
 
-    // Additional safeguard: check if user was already rewarded in referrals collection
-    const existingRefSnap = await db.collection("referrals")
-      .where("referredUserId", "==", newTgId)
-      .limit(1)
-      .get();
-    if (!existingRefSnap.empty) {
-      logger.info(`User ${newTgId} already exists in referrals collection. Duplicate reward blocked.`);
+    // 3. Atomic Lock: Prevent concurrent requests (e.g. claim_referral + check_channel_member hitting within milliseconds)
+    const lockRef = db.collection("referral_locks").doc(newTgId);
+    try {
+      await lockRef.create({
+        lockedAt: FieldValue.serverTimestamp(),
+        referrerId: cleanRefId
+      });
+    } catch (lockErr) {
+      logger.info(`Concurrent or duplicate referral locked for user ${newTgId}. Blocked.`);
       await newUserDocRef.set({ referralCompleted: true }, { merge: true });
       return { success: false, reason: "already_referred" };
     }
