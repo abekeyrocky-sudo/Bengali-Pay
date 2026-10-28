@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import confetti from 'canvas-confetti';
+import { sounds } from '../utils/audio';
+import { checkChannelMembershipAPI } from '../firebase';
+import { getTelegramWebApp, getActiveTelegramUserId } from '../utils/telegram';
 import { 
   Play, 
   Calendar, 
@@ -11,13 +15,17 @@ import {
   X, 
   Copy, 
   Sparkles,
-  ArrowLeft
+  ArrowLeft,
+  Send,
+  ExternalLink
 } from 'lucide-react';
 import cigaretteIcon from '../assets/cigarette-icon.png';
 import taskPageImg from '../assets/task-page-img.jpg';
 
 export const TasksScreen = () => {
   const { 
+    userId,
+    userTelegramId,
     tokens, 
     tasks, 
     setTasks, 
@@ -30,15 +38,49 @@ export const TasksScreen = () => {
     notifyWarn
   } = useApp();
 
-  // Active modal state: null | 'video' | 'survey' | 'refer'
+  // Active modal state: null | 'video' | 'survey' | 'refer' | 'tg_channel'
   const [activeModal, setActiveModal] = useState(null);
   const [videoTimer, setVideoTimer] = useState(15);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isVerifyingChannel, setIsVerifyingChannel] = useState(false);
 
   // Survey state
   const [surveyStep, setSurveyStep] = useState(1);
   const [surveyAnswer, setSurveyAnswer] = useState('');
+
+  // Handle Channel Join verification
+  const handleVerifyChannelJoin = async () => {
+    setIsVerifyingChannel(true);
+    const realTgId = getActiveTelegramUserId() || userTelegramId || (userId?.startsWith('tg_') ? userId.replace('tg_', '') : '');
+    const tgId = realTgId || '7639899614';
+
+    try {
+      const res = await checkChannelMembershipAPI(tgId);
+      if (res && res.isMember) {
+        sounds.playWin();
+        try {
+          confetti({
+            particleCount: 85,
+            spread: 70,
+            origin: { y: 0.55 }
+          });
+        } catch (e) {}
+
+        earnReward(50, 0, 'অফিসিয়াল চ্যানেল জয়েন বোনাস');
+        markTaskDone('tg_channel');
+        setActiveModal(null);
+        notifySuccess('অভিনন্দন! 🎉', '+৫০ ৳ চ্যানেল জয়েন বোনাস সফলভাবে অ্যাকাউন্টে যোগ হয়েছে!');
+      } else {
+        try { sounds.playError?.(); } catch (e) {}
+        notifyWarn('চ্যানেলে জয়েন করা হয়নি!', 'অনুগ্রহ করে প্রথমে Bengali Pay অফিসিয়াল চ্যানেলে জয়েন করুন, তারপর ভেরিফাই বাটনে ট্যাপ করুন।');
+      }
+    } catch (e) {
+      notifyWarn('ভেরিফিকেশন সমস্যা', 'ইন্টারনেট কানেকশন চেক করে আবার চেষ্টা করুন।');
+    } finally {
+      setIsVerifyingChannel(false);
+    }
+  };
 
   // Handle Video Watch
   const startVideoTask = () => {
@@ -81,6 +123,8 @@ export const TasksScreen = () => {
 
   const getTaskIcon = (icon) => {
     switch (icon) {
+      case 'tg_channel':
+        return <Send size={20} color="#0284c7" />;
       case 'video':
         return <Tv size={20} color="#ef4444" />;
       case 'daily':
@@ -99,6 +143,7 @@ export const TasksScreen = () => {
   const handleTaskAction = (task) => {
     if (task.id === 'video') startVideoTask();
     else if (task.id === 'daily') handleDailyCheckin();
+    else if (task.id === 'tg_channel') setActiveModal('tg_channel');
     else if (task.id === 'game') navigateTo('game');
     else if (task.id === 'refer') navigateTo('invite');
     else if (task.id === 'survey') setActiveModal('survey');
@@ -405,11 +450,11 @@ export const TasksScreen = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  পুরস্কার ক্লেইম করুন (+1 ৳ Token)
+                  পুরস্কার ক্লেইম করুন (+১ ৳)
                 </button>
               ) : (
                 <p style={{ fontSize: '12px', color: '#94a3b8' }}>
-                  বিজ্ঞাপনটি দেখলে আপনার অ্যাকাউন্টে ১টি টোকেন যোগ হবে।
+                  বিজ্ঞাপনটি দেখলে আপনার অ্যাকাউন্টে ১ ৳ যোগ হবে।
                 </p>
               )}
             </div>
@@ -627,6 +672,118 @@ export const TasksScreen = () => {
               }}
             >
               বন্ধুর সাথে লিংক শেয়ার করুন (+১০ ৳)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: Join Telegram Channel */}
+      {activeModal === 'tg_channel' && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          zIndex: 200,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '340px',
+            background: '#ffffff',
+            borderRadius: '24px',
+            padding: '22px 20px',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setActiveModal(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: '#e0f2fe',
+              color: '#0284c7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 12px',
+              boxShadow: '0 8px 16px rgba(2, 132, 199, 0.2)'
+            }}>
+              <Send size={28} style={{ transform: 'translateX(-2px) translateY(1px)' }} />
+            </div>
+
+            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
+              অফিসিয়াল চ্যানেলে জয়েন করুন!
+            </h3>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 18px 0', lineHeight: '1.5' }}>
+              Bengali Pay-এর অফিসিয়াল টেলিগ্রাম চ্যানেলে জয়েন করে ইনস্ট্যান্ট <span style={{ color: '#16a34a', fontWeight: '800' }}>৫০ ৳</span> ক্যাশ রিওয়ার্ড নিন।
+            </p>
+
+            <button
+              onClick={() => {
+                const tg = getTelegramWebApp();
+                if (tg && typeof tg.openTelegramLink === 'function') {
+                  tg.openTelegramLink('https://t.me/BengaliPay');
+                } else {
+                  window.open('https://t.me/BengaliPay', '_blank');
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '13px',
+                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                border: 'none',
+                borderRadius: '16px',
+                color: '#fff',
+                fontWeight: '800',
+                fontSize: '14px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                marginBottom: '10px',
+                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
+              }}
+            >
+              <Send size={16} />
+              <span>১. চ্যানেলে জয়েন করুন</span>
+            </button>
+
+            <button
+              disabled={isVerifyingChannel}
+              onClick={handleVerifyChannelJoin}
+              style={{
+                width: '100%',
+                padding: '13px',
+                background: isVerifyingChannel 
+                  ? '#cbd5e1' 
+                  : 'linear-gradient(135deg, #16a34a, #15803d)',
+                border: 'none',
+                borderRadius: '16px',
+                color: '#fff',
+                fontWeight: '800',
+                fontSize: '14px',
+                cursor: isVerifyingChannel ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: isVerifyingChannel ? 'none' : '0 4px 12px rgba(22, 163, 74, 0.25)'
+              }}
+            >
+              <CheckCircle2 size={16} />
+              <span>{isVerifyingChannel ? 'ভেরিফাই হচ্ছে...' : '২. ভেরিফাই ও ৫০ ৳ নিন'}</span>
             </button>
           </div>
         </div>

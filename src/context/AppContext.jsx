@@ -365,6 +365,7 @@ export const AppProvider = ({ children }) => {
   const [tasks, setTasks] = useState([
     { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
     { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
+    { id: 'tg_channel', title: 'Join Telegram Channel', reward: '+50 ৳', amount: 50, type: 'taka', action: 'Join', done: false },
     { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
     { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳', amount: 10, type: 'taka', action: 'Invite', done: false },
     { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
@@ -446,6 +447,7 @@ export const AppProvider = ({ children }) => {
             const defaultTasks = [
               { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
               { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
+              { id: 'tg_channel', title: 'Join Telegram Channel', reward: '+50 ৳', amount: 50, type: 'taka', action: 'Join', done: false },
               { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
               { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳', amount: 10, type: 'taka', action: 'Invite', done: false },
               { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
