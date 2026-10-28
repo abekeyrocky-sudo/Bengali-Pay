@@ -344,16 +344,8 @@ export const AccountStatusScreen = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '10px 12px',
-            background: isGoalMet
-              ? '#f0fdf4'
-              : isWarning
-              ? '#fff1f2'
-              : '#f8fafc',
-            border: isGoalMet
-              ? '1px solid #bbf7d0'
-              : isWarning
-              ? '1px solid #fecdd3'
-              : '1px solid #e2e8f0',
+            background: isGoalMet ? '#f0fdf4' : '#fff5f5',
+            border: isGoalMet ? '1px solid #bbf7d0' : '1px solid #fecdd3',
             borderRadius: '14px',
             marginTop: '2px'
           }}
@@ -364,15 +356,11 @@ export const AccountStatusScreen = () => {
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
-                background: isGoalMet
-                  ? '#dcfce7'
-                  : isWarning
-                  ? '#fee2e2'
-                  : '#eff6ff',
+                background: isGoalMet ? '#dcfce7' : '#fee2e2',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: isGoalMet ? '#16a34a' : isWarning ? '#dc2626' : '#2563eb',
+                color: isGoalMet ? '#16a34a' : '#ef4444',
                 flexShrink: 0
               }}
             >
@@ -383,7 +371,7 @@ export const AccountStatusScreen = () => {
                 style={{
                   fontSize: '11px',
                   fontWeight: '800',
-                  color: isGoalMet ? '#15803d' : isWarning ? '#991b1b' : '#0f172a',
+                  color: isGoalMet ? '#15803d' : '#991b1b',
                   fontFamily: "'Noto Serif Bengali', serif"
                 }}
               >
@@ -392,8 +380,9 @@ export const AccountStatusScreen = () => {
               <div
                 style={{
                   fontSize: '10px',
-                  color: isGoalMet ? '#16a34a' : isWarning ? '#b91c1c' : '#64748b',
-                  fontFamily: "'Noto Serif Bengali', serif"
+                  color: isGoalMet ? '#16a34a' : '#dc2626',
+                  fontFamily: "'Noto Serif Bengali', serif",
+                  fontWeight: isGoalMet ? 'normal' : '600'
                 }}
               >
                 {isGoalMet
@@ -412,18 +401,14 @@ export const AccountStatusScreen = () => {
               alignItems: 'center',
               gap: '3px',
               fontFamily: "'Outfit', monospace",
-              fontWeight: '800',
+              fontWeight: '900',
               fontSize: '13px',
-              color: isGoalMet ? '#15803d' : isWarning ? '#b91c1c' : '#1d4ed8',
+              color: isGoalMet ? '#15803d' : '#dc2626',
               background: '#ffffff',
-              padding: '4px 8px',
-              borderRadius: '8px',
-              border: isGoalMet
-                ? '1px solid #bbf7d0'
-                : isWarning
-                ? '1px solid #fecaca'
-                : '1px solid #dbeafe',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              padding: '5px 9px',
+              borderRadius: '9px',
+              border: isGoalMet ? '1px solid #bbf7d0' : '1.5px solid #fca5a5',
+              boxShadow: isGoalMet ? '0 1px 3px rgba(0,0,0,0.03)' : '0 2px 8px rgba(239, 68, 68, 0.15)',
               flexShrink: 0
             }}
           >

@@ -202,12 +202,12 @@ export const AccountQuotaReminderModal = () => {
           আপনার অ্যাকাউন্ট সচল ও নিরাপদ রাখতে আজকের নির্ধারিত মিশন সম্পন্ন করুন।
         </p>
 
-        {/* Time Remaining Countdown Pill */}
+        {/* Time Remaining Countdown Pill (Urgent Red) */}
         <div
           style={{
             width: '100%',
-            background: isWarning ? '#fff1f2' : '#f8fafc',
-            border: isWarning ? '1px solid #fecdd3' : '1px solid #e2e8f0',
+            background: '#fff1f2',
+            border: '1px solid #fecdd3',
             borderRadius: '14px',
             padding: '10px 14px',
             display: 'flex',
@@ -218,12 +218,12 @@ export const AccountQuotaReminderModal = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Clock size={16} color={isWarning ? '#dc2626' : '#2563eb'} />
+            <Clock size={16} color="#dc2626" />
             <span
               style={{
                 fontSize: '12px',
                 fontWeight: '700',
-                color: isWarning ? '#991b1b' : '#475569',
+                color: '#991b1b',
                 fontFamily: "'Noto Serif Bengali', serif"
               }}
             >
@@ -235,12 +235,12 @@ export const AccountQuotaReminderModal = () => {
               fontSize: '13px',
               fontWeight: '900',
               fontFamily: "'Outfit', monospace",
-              color: isWarning ? '#b91c1c' : '#1d4ed8',
+              color: '#dc2626',
               background: '#ffffff',
               padding: '4px 10px',
               borderRadius: '8px',
-              border: isWarning ? '1px solid #fecaca' : '1px solid #dbeafe',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              border: '1.5px solid #fca5a5',
+              boxShadow: '0 2px 8px rgba(239, 68, 68, 0.12)',
               display: 'flex',
               alignItems: 'center',
               gap: '3px',
