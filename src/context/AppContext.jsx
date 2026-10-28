@@ -361,13 +361,13 @@ export const AppProvider = ({ children }) => {
     });
   };
 
-  // Tasks state
+  // Tasks state (Rewards are strictly in ৳ Taka, Tokens are exclusive to 14-day login streak)
   const [tasks, setTasks] = useState([
-    { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳ Token', amount: 1, type: 'token', action: 'Watch', done: false },
-    { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳ Token', amount: 5, type: 'token', action: 'Claim', done: false },
-    { id: 'game', title: 'Play Mini Game', reward: '+2 ৳ Token', amount: 2, type: 'token', action: 'Play', done: false },
-    { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳ Token', amount: 10, type: 'token', action: 'Invite', done: false },
-    { id: 'survey', title: 'Complete Survey', reward: '+3 ৳ Token', amount: 3, type: 'token', action: 'Start', done: false }
+    { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
+    { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
+    { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
+    { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳', amount: 10, type: 'taka', action: 'Invite', done: false },
+    { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
   ]);
 
   // Process incoming referral if opened with ?startapp=<refParam> or Telegram deep link
@@ -442,7 +442,20 @@ export const AppProvider = ({ children }) => {
             setUserStorage('referral_claimed', 'true');
           }
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
-          if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
+          if (Array.isArray(remoteData.tasks)) {
+            const defaultTasks = [
+              { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
+              { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
+              { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
+              { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳', amount: 10, type: 'taka', action: 'Invite', done: false },
+              { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
+            ];
+            const normalized = defaultTasks.map(defT => {
+              const found = remoteData.tasks.find(t => t.id === defT.id);
+              return found ? { ...defT, done: Boolean(found.done) } : defT;
+            });
+            setTasks(normalized);
+          }
           if (Array.isArray(remoteData.notifications)) {
             const clean = remoteData.notifications.filter(n => !isLegacyDummyNotification(n));
             setNotifications(clean);

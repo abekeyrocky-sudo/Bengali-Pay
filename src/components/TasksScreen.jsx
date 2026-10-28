@@ -54,9 +54,9 @@ export const TasksScreen = () => {
         clearInterval(interval);
         setIsVideoPlaying(false);
         setActiveModal(null);
-        earnReward(1, 1, 'Watch Video Reward');
+        earnReward(1, 0, 'Watch Video Reward');
         markTaskDone('video');
-        notifySuccess('ভিডিও টাস্ক সম্পন্ন!', '+১ ৳ ও +১টি টোকেন সফলভাবে আপনার অ্যাকাউন্টে যোগ হয়েছে!');
+        notifySuccess('ভিডিও টাস্ক সম্পন্ন!', '+১ ৳ সফলভাবে আপনার অ্যাকাউন্টে যোগ হয়েছে!');
       }
     }, 1000);
   };
@@ -73,10 +73,10 @@ export const TasksScreen = () => {
 
   // Handle Survey submit
   const submitSurvey = () => {
-    earnReward(3, 3, 'Survey Completed Reward');
+    earnReward(3, 0, 'Survey Completed Reward');
     markTaskDone('survey');
     setActiveModal(null);
-    notifySuccess('সার্ভে সম্পন্ন!', '+৩ ৳ ও +৩টি টোকেন সফলভাবে অ্যাকাউন্টে যোগ হয়েছে!');
+    notifySuccess('সার্ভে সম্পন্ন!', '+৩ ৳ সফলভাবে অ্যাকাউন্টে যোগ হয়েছে!');
   };
 
   const getTaskIcon = (icon) => {
@@ -143,7 +143,7 @@ export const TasksScreen = () => {
             color: '#0f172a',
             fontFamily: "'Outfit', sans-serif"
           }}>
-            Earn Tokens
+            Earn Rewards
           </h2>
         </div>
 
@@ -508,7 +508,7 @@ export const TasksScreen = () => {
                 cursor: surveyAnswer ? 'pointer' : 'not-allowed'
               }}
             >
-              জমা দিন ও ৩টি টোকেন নিন
+              জমা দিন ও ৩ ৳ রিওয়ার্ড নিন
             </button>
           </div>
         </div>
@@ -559,10 +559,10 @@ export const TasksScreen = () => {
             </div>
 
             <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>
-              রেফার করুন আর টোকেন জিতুন!
+              রেফার করুন আর ক্যাশ জিতুন!
             </h3>
             <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', marginBottom: '16px' }}>
-              প্রতি রেফারে পাবেন ১০টি ফ্রি টোকেন
+              প্রতি সফল রেফারে পাবেন ৫০ ৳ ক্যাশ রিওয়ার্ড
             </p>
 
             <div style={{
@@ -610,7 +610,7 @@ export const TasksScreen = () => {
 
             <button
               onClick={() => {
-                earnReward(0, 10, 'রেফারেল টাস্ক বোনাস');
+                earnReward(10, 0, 'রেফারেল টাস্ক বোনাস');
                 markTaskDone('refer');
                 setActiveModal(null);
               }}
@@ -626,7 +626,7 @@ export const TasksScreen = () => {
                 cursor: 'pointer'
               }}
             >
-              বন্ধুর সাথে লিংক শেয়ার করুন (+10)
+              বন্ধুর সাথে লিংক শেয়ার করুন (+১০ ৳)
             </button>
           </div>
         </div>

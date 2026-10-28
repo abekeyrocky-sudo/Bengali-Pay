@@ -32,11 +32,11 @@ export const GameScreen = () => {
   const segments = [
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#7ED957', textColor: '#22543d' },
     { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#38B6FF', textColor: '#1a365d' },
-    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#FF47A7', textColor: '#702459' },
+    { label: '5৳', amount: '5', value: 5, type: 'taka', isToken: false, color: '#FF47A7', textColor: '#702459' },
     { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#FF914D', textColor: '#7b341e' },
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#7ED957', textColor: '#22543d' },
     { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#38B6FF', textColor: '#1a365d' },
-    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#FF47A7', textColor: '#702459' },
+    { label: '5৳', amount: '5', value: 5, type: 'taka', isToken: false, color: '#FF47A7', textColor: '#702459' },
     { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#FF914D', textColor: '#7b341e' },
   ];
 
