@@ -9,6 +9,7 @@ import { WithdrawScreen } from './components/WithdrawScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { InviteScreen } from './components/InviteScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
+import { AccountStatusScreen } from './components/AccountStatusScreen';
 import { BottomNav } from './components/BottomNav';
 import { ActionModal } from './components/ActionModal';
 import { ChannelGateModal } from './components/ChannelGateModal';
@@ -24,7 +25,8 @@ const screenBgMap = {
   withdraw: '#f8fafc',
   profile: '#f8fafc',
   invite: '#f8fafc',
-  notifications: '#f8fafc'
+  notifications: '#f8fafc',
+  'account-status': '#f8fafc'
 };
 
 const MainAppContent = () => {
@@ -58,7 +60,11 @@ const MainAppContent = () => {
   // Sync Telegram Native Back Button with app screen navigation
   useEffect(() => {
     updateTelegramBackButton(currentScreen, () => {
-      setCurrentScreen('home');
+      if (currentScreen === 'account-status') {
+        setCurrentScreen('profile');
+      } else {
+        setCurrentScreen('home');
+      }
     });
   }, [currentScreen, setCurrentScreen]);
 
@@ -82,6 +88,8 @@ const MainAppContent = () => {
         return <InviteScreen />;
       case 'notifications':
         return <NotificationsScreen />;
+      case 'account-status':
+        return <AccountStatusScreen />;
       default:
         return <HomeScreen />;
     }

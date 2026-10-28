@@ -17,9 +17,9 @@ import {
 } from 'lucide-react';
 
 // Pure solid-fill SVG icons (100% reliable across all phones & browsers)
-const FilledTasksIcon = () => (
+const FilledShieldStatusIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h7v2H7v-2zm0 4h10v2H7v-2z"/>
+    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
   </svg>
 );
 
@@ -59,13 +59,14 @@ export const ProfileScreen = () => {
     navigateTo, 
     balance, 
     tokens,
-    transactions 
+    transactions,
+    referralQuota
   } = useApp();
 
   const [activeModal, setActiveModal] = useState(null);
 
   const menuItems = [
-    { id: 'tasks', label: 'My Tasks', icon: FilledTasksIcon, action: () => navigateTo('tasks') },
+    { id: 'account-status', label: 'Account Status', icon: FilledShieldStatusIcon, action: () => navigateTo('account-status') },
     { id: 'history', label: 'Withdraw History', icon: FilledPaidIcon, action: () => setActiveModal('history') },
     { id: 'invite', label: 'Invite Friends', icon: FilledGroupIcon, action: () => navigateTo('invite') },
     { id: 'help', label: 'Help & Support', icon: FilledHelpIcon, action: () => setActiveModal('help') },
@@ -294,6 +295,21 @@ export const ProfileScreen = () => {
               }}>
                 {item.label}
               </span>
+
+              {item.id === 'account-status' && (
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  background: referralQuota?.accountStatus === 'WARNING' ? '#fee2e2' : '#dcfce7',
+                  color: referralQuota?.accountStatus === 'WARNING' ? '#dc2626' : '#16a34a',
+                  letterSpacing: '0.3px',
+                  textTransform: 'uppercase'
+                }}>
+                  {referralQuota?.accountStatus === 'WARNING' ? 'Warning' : 'Active'}
+                </span>
+              )}
             </div>
 
             <ChevronRight size={18} color="#94a3b8" />

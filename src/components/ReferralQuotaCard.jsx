@@ -192,3 +192,4 @@ export const ReferralQuotaCard = () => {
     </div>
   );
 };
+
