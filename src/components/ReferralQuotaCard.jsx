@@ -21,6 +21,7 @@ export const ReferralQuotaCard = () => {
   return (
     <div
       style={{
+        flexShrink: 0,
         borderRadius: '20px',
         padding: '16px',
         background: isWarning
