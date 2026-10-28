@@ -251,7 +251,8 @@ export const AppProvider = ({ children }) => {
     missedDaysCount: 0,
     accountStatus: 'ACTIVE', // 'ACTIVE' | 'WARNING'
     canWithdraw: true,
-    lastEvaluatedDate: ''
+    lastEvaluatedDate: '',
+    nextResetMs: 0
   });
 
   const refreshReferralQuota = async () => {
@@ -265,7 +266,8 @@ export const AppProvider = ({ children }) => {
           missedDaysCount: res.missedDaysCount ?? 0,
           accountStatus: res.accountStatus ?? 'ACTIVE',
           canWithdraw: res.canWithdraw !== false,
-          lastEvaluatedDate: res.todayBD ?? ''
+          lastEvaluatedDate: res.todayBD ?? '',
+          nextResetMs: res.nextResetMs ?? 0
         });
       }
     } catch (e) {

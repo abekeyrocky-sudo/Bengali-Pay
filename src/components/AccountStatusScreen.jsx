@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import { 
@@ -11,12 +11,68 @@ import {
   ChevronRight,
   Info,
   CheckCircle2,
-  X
+  X,
+  Clock
 } from 'lucide-react';
 
 export const AccountStatusScreen = () => {
-  const { referralQuota, navigateTo } = useApp();
+  const { referralQuota, refreshReferralQuota, navigateTo } = useApp();
   const [showInfoModal, setShowInfoModal] = useState(false);
+
+  // Live 6:00 AM Bangladesh Time reset countdown timer
+  const [timeLeft, setTimeLeft] = useState({
+    hours: '00',
+    minutes: '00',
+    seconds: '00',
+    totalSec: 0
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = Date.now();
+      let targetMs = referralQuota?.nextResetMs;
+
+      // Fallback: calculate next 6:00 AM BD Time (UTC+6) directly if not yet received from backend
+      if (!targetMs || targetMs <= now) {
+        const cycleDate = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Dhaka',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date(now - 6 * 3600 * 1000));
+        const [year, month, day] = cycleDate.split('-').map(Number);
+        targetMs = Date.UTC(year, month - 1, day + 1, 0, 0, 0);
+      }
+
+      const diffSec = Math.max(0, Math.floor((targetMs - now) / 1000));
+      const hours = Math.floor(diffSec / 3600);
+      const minutes = Math.floor((diffSec % 3600) / 60);
+      const seconds = diffSec % 60;
+
+      return {
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+        seconds: String(seconds).padStart(2, '0'),
+        totalSec: diffSec
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const interval = setInterval(() => {
+      const updated = calculateTimeLeft();
+      setTimeLeft(updated);
+
+      // On 6:00 AM reset expiration, trigger sync to reload quota & penalty
+      if (updated.totalSec === 0) {
+        if (typeof refreshReferralQuota === 'function') {
+          refreshReferralQuota();
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [referralQuota?.nextResetMs, refreshReferralQuota]);
 
   const {
     currentDailyQuota = 1,
@@ -278,6 +334,104 @@ export const AccountStatusScreen = () => {
                 transition: 'width 0.4s ease'
               }}
             />
+          </div>
+        </div>
+
+        {/* 6:00 AM Reset Countdown Timer Strip */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 12px',
+            background: isGoalMet
+              ? '#f0fdf4'
+              : isWarning
+              ? '#fff1f2'
+              : '#f8fafc',
+            border: isGoalMet
+              ? '1px solid #bbf7d0'
+              : isWarning
+              ? '1px solid #fecdd3'
+              : '1px solid #e2e8f0',
+            borderRadius: '14px',
+            marginTop: '2px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                background: isGoalMet
+                  ? '#dcfce7'
+                  : isWarning
+                  ? '#fee2e2'
+                  : '#eff6ff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: isGoalMet ? '#16a34a' : isWarning ? '#dc2626' : '#2563eb',
+                flexShrink: 0
+              }}
+            >
+              <Clock size={15} />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  color: isGoalMet ? '#15803d' : isWarning ? '#991b1b' : '#0f172a',
+                  fontFamily: "'Noto Serif Bengali', serif"
+                }}
+              >
+                {isGoalMet ? 'আজকের মিশন সফল ✅' : 'সময় বাকি (সকাল ৬:০০ টায় রিসেট)'}
+              </div>
+              <div
+                style={{
+                  fontSize: '10px',
+                  color: isGoalMet ? '#16a34a' : isWarning ? '#b91c1c' : '#64748b',
+                  fontFamily: "'Noto Serif Bengali', serif"
+                }}
+              >
+                {isGoalMet
+                  ? 'পরবর্তী সাইকেল শুরু হওয়া পর্যন্ত অপেক্ষা করুন'
+                  : isWarning
+                  ? 'সময় শেষ হলে আরো ১টি কোটা বৃদ্ধি পাবে'
+                  : 'সময় শেষ হলে পেনাল্টি যুক্ত হবে'}
+              </div>
+            </div>
+          </div>
+
+          {/* Digital Timer Badges */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              fontFamily: "'Outfit', monospace",
+              fontWeight: '800',
+              fontSize: '13px',
+              color: isGoalMet ? '#15803d' : isWarning ? '#b91c1c' : '#1d4ed8',
+              background: '#ffffff',
+              padding: '4px 8px',
+              borderRadius: '8px',
+              border: isGoalMet
+                ? '1px solid #bbf7d0'
+                : isWarning
+                ? '1px solid #fecaca'
+                : '1px solid #dbeafe',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              flexShrink: 0
+            }}
+          >
+            <span>{timeLeft.hours}</span>
+            <span style={{ opacity: 0.5 }}>:</span>
+            <span>{timeLeft.minutes}</span>
+            <span style={{ opacity: 0.5 }}>:</span>
+            <span>{timeLeft.seconds}</span>
           </div>
         </div>
 

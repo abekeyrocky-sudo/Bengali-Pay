@@ -71,15 +71,26 @@ async function telegramApi(method, body = {}) {
 }
 
 /**
- * Helper to get current Date string in Bangladesh Time (YYYY-MM-DD)
+ * Daily reset occurs at 06:00 AM Bangladesh Time (Asia/Dhaka).
+ * Returns the cycle date YYYY-MM-DD (shifts backward by 6 hours so 06:00 AM is the cutoff).
  */
-function getBangladeshTodayDate() {
+function getBangladesh6amCycleDate(date = new Date()) {
+  const adjusted = new Date(date.getTime() - 6 * 3600 * 1000);
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Dhaka',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
-  }).format(new Date());
+  }).format(adjusted);
+}
+
+/**
+ * Calculates the upcoming 06:00:00 AM Bangladesh Time deadline timestamp in ms.
+ */
+function getNext6amDeadlineMs(cycleDate) {
+  const parts = cycleDate.split('-').map(Number);
+  // Next 6:00 AM BD Time (+06:00) is exactly 00:00:00 UTC of cycleDate + 1 day
+  return Date.UTC(parts[0], parts[1] - 1, parts[2] + 1, 0, 0, 0);
 }
 
 /**
@@ -98,7 +109,8 @@ async function evaluateAndSyncReferralQuota(userId, userTelegramId) {
   const cleanTgId = String(userTelegramId || userId || "").replace(/^tg_/, "").trim();
   const docId = cleanTgId ? `tg_${cleanTgId}` : String(userId);
   const userDocRef = db.collection("users").doc(docId);
-  const todayBD = getBangladeshTodayDate();
+  const todayBD = getBangladesh6amCycleDate();
+  const nextResetMs = getNext6amDeadlineMs(todayBD);
 
   try {
     const userSnap = await userDocRef.get();
@@ -160,6 +172,7 @@ async function evaluateAndSyncReferralQuota(userId, userTelegramId) {
     return {
       success: true,
       todayBD,
+      nextResetMs,
       currentDailyQuota: currentQuota,
       todayReferralCount: todayCount,
       missedDaysCount: missedDays,
@@ -249,8 +262,8 @@ async function processReferralReward(newUser, referrerParam) {
     const REFER_REWARD = 50; // 50৳ per refer
 
     // 4. Update Referrer's balance (+50৳), tokens (+50), referral count (+1), referral bonus (+50৳)
-    // AND update daily referral quota progress & account status!
-    const todayBD = getBangladeshTodayDate();
+    // AND update daily referral quota progress & account status (6 AM Cycle)!
+    const todayBD = getBangladesh6amCycleDate();
     const prevRefData = referrerData || {};
     const refLastDate = prevRefData.lastEvaluatedDate || todayBD;
     const refTodayCount = (refLastDate === todayBD ? (prevRefData.todayReferralCount || 0) : 0) + 1;
