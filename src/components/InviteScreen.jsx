@@ -20,7 +20,7 @@ import inviteTeamArt from '../assets/invite-team-art.png';
 import inviteGiftArt from '../assets/invite-gift-art.png';
 
 export const InviteScreen = () => {
-  const { userId, userTelegramId, balance = 0, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess, addNotification } = useApp();
+  const { userId, userTelegramId, balance = 0, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess, addNotification, isQuotaLocked } = useApp();
   const [copied, setCopied] = useState(false);
 
   const displayBonus = referralBonus || (referralCount * 50);
@@ -90,7 +90,7 @@ export const InviteScreen = () => {
         {/* Back Button & Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button 
-            onClick={() => navigateTo('home')}
+            onClick={() => navigateTo(isQuotaLocked?.() ? 'account-status' : 'home')}
             style={{
               background: '#ffffff',
               border: '1.5px solid #e2e8f0',

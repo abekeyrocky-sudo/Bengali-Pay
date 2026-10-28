@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const AccountStatusScreen = () => {
-  const { referralQuota, refreshReferralQuota, navigateTo } = useApp();
+  const { referralQuota, refreshReferralQuota, navigateTo, isQuotaLocked, setIsQuotaReminderOpen } = useApp();
   const [showInfoModal, setShowInfoModal] = useState(false);
 
   // Live 6:00 AM Bangladesh Time reset countdown timer
@@ -88,6 +88,11 @@ export const AccountStatusScreen = () => {
 
   const handleBack = () => {
     sounds.playClick();
+    if (isQuotaLocked?.()) {
+      try { sounds.playError?.(); } catch (e) {}
+      setIsQuotaReminderOpen(true);
+      return;
+    }
     navigateTo('profile');
   };
 

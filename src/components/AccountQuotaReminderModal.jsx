@@ -32,8 +32,13 @@ const getStoredSkipCount = () => {
 };
 
 export const AccountQuotaReminderModal = () => {
-  const { referralQuota, navigateTo, currentScreen, userId } = useApp();
-  const [isOpen, setIsOpen] = useState(false);
+  const { 
+    referralQuota, 
+    navigateTo, 
+    userId,
+    isQuotaReminderOpen,
+    setIsQuotaReminderOpen
+  } = useApp();
   const [skipCount, setSkipCount] = useState(getStoredSkipCount);
   const hasTriggeredRef = useRef(false);
 
@@ -47,7 +52,7 @@ export const AccountQuotaReminderModal = () => {
   // Sync skip count on open or cycle change
   useEffect(() => {
     setSkipCount(getStoredSkipCount());
-  }, [isOpen]);
+  }, [isQuotaReminderOpen]);
 
   const currentDailyQuota = referralQuota?.currentDailyQuota ?? 1;
   const todayReferralCount = referralQuota?.todayReferralCount ?? 0;
@@ -60,7 +65,7 @@ export const AccountQuotaReminderModal = () => {
   const remainingSkips = isPenalized ? 0 : Math.max(0, MAX_DAILY_SKIPS - skipCount);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isQuotaReminderOpen) return;
 
     const calculateTimeLeft = () => {
       const now = Date.now();
@@ -96,7 +101,7 @@ export const AccountQuotaReminderModal = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, referralQuota?.nextResetMs]);
+  }, [isQuotaReminderOpen, referralQuota?.nextResetMs]);
 
   useEffect(() => {
     // If penalized, trigger quickly after mount (1.2s); normal days wait 15s
@@ -110,7 +115,7 @@ export const AccountQuotaReminderModal = () => {
         
         // Show if target is pending
         if (done < target) {
-          setIsOpen(true);
+          setIsQuotaReminderOpen(true);
           try {
             sounds.playNotification();
           } catch (e) {}
@@ -119,18 +124,13 @@ export const AccountQuotaReminderModal = () => {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [referralQuota, isPenalized]);
+  }, [referralQuota, isPenalized, setIsQuotaReminderOpen]);
 
-  if (!isOpen) return null;
-
-  // Don't show on top of game screen during active gameplay or if user is already on status / invite
-  if (currentScreen === 'game' || currentScreen === 'account-status' || currentScreen === 'invite') {
-    return null;
-  }
+  if (!isQuotaReminderOpen) return null;
 
   const handleGoToStatus = () => {
     sounds.playClick();
-    setIsOpen(false);
+    setIsQuotaReminderOpen(false);
     navigateTo('account-status');
   };
 
@@ -151,7 +151,7 @@ export const AccountQuotaReminderModal = () => {
         saveUserToFirestore(userId, { modalSkipDate: cycle, modalSkipCount: newCount });
       }
     } catch (e) {}
-    setIsOpen(false);
+    setIsQuotaReminderOpen(false);
   };
 
   return (

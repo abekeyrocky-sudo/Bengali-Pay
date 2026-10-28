@@ -637,7 +637,57 @@ export const AppProvider = ({ children }) => {
     showModal({ type: 'fail', title, message, ...options });
   };
 
+  // Quota Lockout State & Modal Control
+  const [isQuotaReminderOpen, setIsQuotaReminderOpen] = useState(false);
+
+  const getQuotaCycleDate = () => {
+    const now = Date.now();
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date(now - 6 * 3600 * 1000));
+  };
+
+  const getStoredSkipCount = () => {
+    try {
+      const cycle = getQuotaCycleDate();
+      const raw = localStorage.getItem('bp_quota_modal_skip_data');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.date === cycle) {
+          return typeof parsed.count === 'number' ? parsed.count : 0;
+        }
+      }
+    } catch (e) {}
+    return 0;
+  };
+
+  const isQuotaLocked = () => {
+    const target = referralQuota?.currentDailyQuota ?? 1;
+    const done = referralQuota?.todayReferralCount ?? 0;
+    if (done >= target) return false;
+
+    const isPenalized = referralQuota?.accountStatus === 'WARNING' || (referralQuota?.missedDaysCount > 0);
+    const skipCount = getStoredSkipCount();
+    return isPenalized || skipCount >= 2;
+  };
+
   const navigateTo = (screen) => {
+    // If quota mission is strictly locked (skips exhausted or penalty active, quota incomplete)
+    if (isQuotaLocked()) {
+      // User is ONLY allowed to access 'account-status' and 'invite' (plus initial 'splash')
+      if (screen !== 'account-status' && screen !== 'invite' && screen !== 'splash') {
+        try {
+          sounds.playError?.();
+        } catch (e) {}
+        // Block navigation and immediately show the locked quota reminder popup!
+        setIsQuotaReminderOpen(true);
+        return;
+      }
+    }
+
     sounds.playClick();
     setCurrentScreen(screen);
   };
@@ -665,6 +715,9 @@ export const AppProvider = ({ children }) => {
         currentScreen,
         setCurrentScreen,
         navigateTo,
+        isQuotaReminderOpen,
+        setIsQuotaReminderOpen,
+        isQuotaLocked,
         deviceView,
         setDeviceView,
         soundOn,
