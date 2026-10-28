@@ -363,8 +363,8 @@ export const WithdrawScreen = () => {
         overflow: 'hidden'
       }}>
         <div style={{ zIndex: 1 }}>
-          <span style={{ fontSize: '12px', fontWeight: '700', color: '#854d0e', fontFamily: "'Noto Serif Bengali', serif" }}>
-            উইথড্র লিমিট (Withdraw Limit)
+          <span style={{ fontSize: '13px', fontWeight: '800', color: '#854d0e', fontFamily: "'Outfit', sans-serif" }}>
+            Withdraw Limit
           </span>
           <p style={{
             fontSize: '24px',
