@@ -574,13 +574,15 @@ export const AccountStatusScreen = () => {
               position: 'relative',
               width: '100%',
               maxWidth: '350px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
               background: '#ffffff',
               borderRadius: '24px',
-              padding: '24px 20px',
+              padding: '22px 18px',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '14px',
+              gap: '12px',
               animation: 'modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
           >
@@ -648,7 +650,7 @@ export const AccountStatusScreen = () => {
               <div style={{ display: 'flex', gap: '10px', background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
                 <span style={{ fontWeight: '900', color: '#2563eb', flexShrink: 0 }}>১.</span>
                 <span>
-                  <strong>প্রতিদিন ১টি সক্রিয় রেফার:</strong> অ্যাকাউন্ট সার্বক্ষণিক অ্যাক্টিভ ও সুরক্ষিত রাখতে রেফার করা বন্ধুকে অবশ্যই অফিসিয়াল টেলিগ্রাম চ্যানেলে জয়েন করতে হবে। চ্যানেলে জয়েন করা ছাড়া রেফার সক্রিয় (Active) হিসেবে গণ্য হবে না।
+                  <strong>প্রতিদিন ১টি সক্রিয় রেফার:</strong> অ্যাকাউন্ট সার্বক্ষণিক সচল ও উইথড্র সুবিধা সুরক্ষিত রাখতে প্রতিদিন অন্তত ১ জন বন্ধুকে সফলভাবে রেফার করতে হবে।
                 </span>
               </div>
 
@@ -663,6 +665,13 @@ export const AccountStatusScreen = () => {
                 <span style={{ fontWeight: '900', color: '#16a34a', flexShrink: 0 }}>৩.</span>
                 <span>
                   <strong>কোটা পূরণে রিকভারি:</strong> বর্ধিত কোটা পূরণ করা মাত্র অ্যাকাউন্ট সাথে সাথে Active হবে এবং পূর্ববর্তী সব পেনাল্টি মাফ হয়ে উইথড্র চালু হবে।
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
+                <span style={{ fontWeight: '900', color: '#8b5cf6', flexShrink: 0 }}>৪.</span>
+                <span>
+                  <strong>চ্যানেলে জয়েন বাধ্যতামূলক:</strong> আপনার রেফার করা বন্ধুকে অবশ্যই অফিসিয়াল টেলিগ্রাম চ্যানেলে যুক্ত থাকতে হবে, অন্যথায় তা সক্রিয় রেফার হিসেবে গণ্য হবে না।
                 </span>
               </div>
             </div>
