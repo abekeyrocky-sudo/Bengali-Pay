@@ -1,11 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
-import { ShieldCheck, ArrowRight, X, Clock } from 'lucide-react';
+import { saveUserToFirestore } from '../firebase';
+import { ShieldCheck, ArrowRight, X, Clock, Lock } from 'lucide-react';
+
+const MAX_DAILY_SKIPS = 2;
+
+// Get Bangladesh 6:00 AM cycle date YYYY-MM-DD
+const getCycleDateStr = () => {
+  const now = Date.now();
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date(now - 6 * 3600 * 1000));
+};
+
+const getStoredSkipCount = () => {
+  try {
+    const cycle = getCycleDateStr();
+    const raw = localStorage.getItem('bp_quota_modal_skip_data');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.date === cycle) {
+        return typeof parsed.count === 'number' ? parsed.count : 0;
+      }
+    }
+  } catch (e) {}
+  return 0;
+};
 
 export const AccountQuotaReminderModal = () => {
-  const { referralQuota, navigateTo, currentScreen } = useApp();
+  const { referralQuota, navigateTo, currentScreen, userId } = useApp();
   const [isOpen, setIsOpen] = useState(false);
+  const [skipCount, setSkipCount] = useState(getStoredSkipCount);
   const hasTriggeredRef = useRef(false);
 
   // Live 6:00 AM reset countdown timer
@@ -14,6 +43,14 @@ export const AccountQuotaReminderModal = () => {
     minutes: '00',
     seconds: '00'
   });
+
+  // Sync skip count on open or cycle change
+  useEffect(() => {
+    setSkipCount(getStoredSkipCount());
+  }, [isOpen]);
+
+  const canSkip = skipCount < MAX_DAILY_SKIPS;
+  const remainingSkips = Math.max(0, MAX_DAILY_SKIPS - skipCount);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -78,8 +115,10 @@ export const AccountQuotaReminderModal = () => {
 
   if (!isOpen) return null;
 
-  // Don't show on top of game screen during active gameplay
-  if (currentScreen === 'game') return null;
+  // Don't show on top of game screen during active gameplay or if user is already on status / invite
+  if (currentScreen === 'game' || currentScreen === 'account-status' || currentScreen === 'invite') {
+    return null;
+  }
 
   const currentDailyQuota = referralQuota?.currentDailyQuota ?? 1;
   const todayReferralCount = referralQuota?.todayReferralCount ?? 0;
@@ -91,14 +130,34 @@ export const AccountQuotaReminderModal = () => {
     navigateTo('account-status');
   };
 
-  const handleClose = () => {
+  const handleSkip = () => {
+    if (!canSkip) {
+      try {
+        sounds.playError?.();
+      } catch (e) {}
+      return;
+    }
     sounds.playClick();
+    const cycle = getCycleDateStr();
+    const newCount = skipCount + 1;
+    setSkipCount(newCount);
+    try {
+      localStorage.setItem('bp_quota_modal_skip_data', JSON.stringify({ date: cycle, count: newCount }));
+      if (userId) {
+        saveUserToFirestore(userId, { modalSkipDate: cycle, modalSkipCount: newCount });
+      }
+    } catch (e) {}
     setIsOpen(false);
   };
 
   return (
     <div
-      onClick={handleClose}
+      onClick={() => {
+        // Only allow backdrop dismiss if user still has skips left
+        if (canSkip) {
+          handleSkip();
+        }
+      }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -131,27 +190,48 @@ export const AccountQuotaReminderModal = () => {
           alignItems: 'center'
         }}
       >
-        {/* Close Button Top-Right */}
-        <button
-          onClick={handleClose}
-          style={{
-            position: 'absolute',
-            top: '14px',
-            right: '14px',
-            width: '28px',
-            height: '28px',
-            borderRadius: '50%',
-            background: '#f1f5f9',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            color: '#64748b'
-          }}
-        >
-          <X size={16} />
-        </button>
+        {/* Close Button Top-Right (Active if canSkip, Locked if 2 skips exhausted) */}
+        {canSkip ? (
+          <button
+            onClick={handleSkip}
+            style={{
+              position: 'absolute',
+              top: '14px',
+              right: '14px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: '#f1f5f9',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#64748b'
+            }}
+          >
+            <X size={16} />
+          </button>
+        ) : (
+          <div
+            style={{
+              position: 'absolute',
+              top: '14px',
+              right: '14px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: '#fee2e2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#dc2626'
+            }}
+            title="আজকের স্কিপ সীমা শেষ"
+          >
+            <Lock size={14} />
+          </div>
+        )}
 
         {/* Clean Icon Badge */}
         <div
@@ -195,11 +275,14 @@ export const AccountQuotaReminderModal = () => {
             margin: '0 0 14px 0',
             fontSize: '13px',
             lineHeight: '1.5',
-            color: '#475569',
-            fontFamily: "'Noto Serif Bengali', serif"
+            color: canSkip ? '#475569' : '#dc2626',
+            fontFamily: "'Noto Serif Bengali', serif",
+            fontWeight: canSkip ? 'normal' : '600'
           }}
         >
-          আপনার অ্যাকাউন্ট সচল ও নিরাপদ রাখতে আজকের নির্ধারিত মিশন সম্পন্ন করুন।
+          {canSkip
+            ? 'আপনার অ্যাকাউন্ট সচল ও নিরাপদ রাখতে আজকের নির্ধারিত মিশন সম্পন্ন করুন।'
+            : '⚠️ আপনার আজকের ২ বার স্কিপ করার সীমা শেষ! অ্যাকাউন্ট সচল রাখতে নিচের বাটনে ট্যাপ করে মিশন দেখুন।'}
         </p>
 
         {/* Time Remaining Countdown Pill (Urgent Red) */}
@@ -281,22 +364,52 @@ export const AccountQuotaReminderModal = () => {
           <ArrowRight size={16} />
         </button>
 
-        {/* Secondary Dismiss Button */}
-        <button
-          onClick={handleClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '6px',
-            fontSize: '12px',
-            fontWeight: '700',
-            color: '#94a3b8',
-            cursor: 'pointer',
-            fontFamily: "'Noto Serif Bengali', serif"
-          }}
-        >
-          পরে করব
-        </button>
+        {/* Secondary Dismiss Button (Only if user has skips left) */}
+        {canSkip ? (
+          <button
+            onClick={handleSkip}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '6px',
+              fontSize: '12px',
+              fontWeight: '700',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              fontFamily: "'Noto Serif Bengali', serif",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>পরে করব</span>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800' }}>
+              (আজকের বাকি: {remainingSkips} বার)
+            </span>
+          </button>
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              padding: '8px 10px',
+              borderRadius: '12px',
+              background: '#fef2f2',
+              border: '1px solid #fee2e2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              color: '#dc2626',
+              fontSize: '11px',
+              fontWeight: '800',
+              fontFamily: "'Noto Serif Bengali', serif",
+              boxSizing: 'border-box'
+            }}
+          >
+            <Lock size={13} color="#ef4444" />
+            <span>আজকের স্কিপ শেষ! অ্যাকাউন্ট সচল রাখতে কোটা পূরণ করুন</span>
+          </div>
+        )}
       </div>
     </div>
   );
