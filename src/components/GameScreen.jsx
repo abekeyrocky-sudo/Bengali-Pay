@@ -32,11 +32,11 @@ export const GameScreen = () => {
   const segments = [
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#7ED957', textColor: '#22543d' },
     { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#38B6FF', textColor: '#1a365d' },
-    { label: '5৳', amount: '5', value: 5, type: 'taka', isToken: false, color: '#FF47A7', textColor: '#702459' },
+    { label: '50 Cigarette Token', amount: '50', value: 50, type: 'token', isToken: true, color: '#FF47A7', textColor: '#702459' },
     { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#FF914D', textColor: '#7b341e' },
     { label: '10৳', amount: '10', value: 10, type: 'taka', isToken: false, color: '#7ED957', textColor: '#22543d' },
     { label: '20৳', amount: '20', value: 20, type: 'taka', isToken: false, color: '#38B6FF', textColor: '#1a365d' },
-    { label: '5৳', amount: '5', value: 5, type: 'taka', isToken: false, color: '#FF47A7', textColor: '#702459' },
+    { label: '100 Cigarette Token', amount: '100', value: 100, type: 'token', isToken: true, color: '#FF47A7', textColor: '#702459' },
     { label: '50৳', amount: '50', value: 50, type: 'taka', isToken: false, color: '#FF914D', textColor: '#7b341e' },
   ];
 
@@ -55,6 +55,8 @@ export const GameScreen = () => {
     for (let i = 0; i < weights.length; i++) {
       accumulated += weights[i];
       if (rand < accumulated) {
+        // Guaranteed 0% chance: slots 2 & 6 (tokens) are visual only and strictly impossible to land on
+        if (i === 2 || i === 6) return 0;
         return i;
       }
     }
@@ -80,8 +82,9 @@ export const GameScreen = () => {
     setWinPrize(null);
     sounds.playClick();
 
-    // Pick a winning index according to weighted probabilities
-    const winningIndex = getWeightedWinningIndex();
+    // Pick a winning index according to weighted probabilities (slots 2 & 6 are strictly 0%)
+    let winningIndex = getWeightedWinningIndex();
+    if (winningIndex === 2 || winningIndex === 6) winningIndex = 0;
     const prize = segments[winningIndex];
 
     // Compute rotation with exact landing under top needle pointer
