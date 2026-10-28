@@ -758,7 +758,7 @@ export const AppProvider = ({ children }) => {
 
     const isPenalized = referralQuota?.accountStatus === 'WARNING' || (referralQuota?.missedDaysCount > 0);
     const skipCount = getStoredSkipCount();
-    return isPenalized || skipCount >= 2;
+    return isPenalized || skipCount >= 5;
   };
 
   const navigateTo = (screen) => {

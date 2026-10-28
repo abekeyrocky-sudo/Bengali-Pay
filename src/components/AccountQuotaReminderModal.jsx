@@ -5,7 +5,7 @@ import { saveUserToFirestore } from '../firebase';
 import { ShieldCheck, AlertTriangle, ArrowRight, X, Lock } from 'lucide-react';
 import { ClockLottie } from './ClockLottie';
 
-const MAX_DAILY_SKIPS = 2;
+const MAX_DAILY_SKIPS = 5;
 
 // Get Bangladesh 6:00 AM cycle date YYYY-MM-DD
 const getCycleDateStr = () => {
@@ -298,7 +298,7 @@ export const AccountQuotaReminderModal = () => {
             ? `পূর্ববর্তী দিনে মিশন সম্পন্ন না করায় অ্যাকাউন্টে পেনাল্টি যুক্ত হয়েছে এবং উইথড্র বন্ধ রয়েছে। অ্যাকাউন্ট সচল করতে আজকের ${currentDailyQuota}টি রেফার কোটা পূরণ করা বাধ্যতামূলক (কোনো স্কিপ নেই)।`
             : canSkip
             ? 'আপনার অ্যাকাউন্ট সচল ও নিরাপদ রাখতে আজকের নির্ধারিত মিশন সম্পন্ন করুন।'
-            : '⚠️ আপনার আজকের ২ বার স্কিপ করার সীমা শেষ! অ্যাকাউন্ট সচল রাখতে নিচের বাটনে ট্যাপ করে মিশন দেখুন।'}
+            : '⚠️ আপনার আজকের ৫ বার স্কিপ করার সীমা শেষ! অ্যাকাউন্ট সচল রাখতে নিচের বাটনে ট্যাপ করে মিশন দেখুন।'}
         </p>
 
         {/* Time Remaining Countdown Pill (Urgent Red) */}
