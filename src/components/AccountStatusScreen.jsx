@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import { 
@@ -10,11 +10,13 @@ import {
   Wallet, 
   ChevronRight,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  X
 } from 'lucide-react';
 
 export const AccountStatusScreen = () => {
   const { referralQuota, navigateTo } = useApp();
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const {
     currentDailyQuota = 1,
@@ -86,10 +88,31 @@ export const AccountStatusScreen = () => {
           Account Status
         </h2>
 
-        <div style={{ width: '38px' }} />
+        {/* Top-Right Info Button */}
+        <button
+          onClick={() => {
+            sounds.playClick();
+            setShowInfoModal(true);
+          }}
+          style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            width: '38px',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            color: '#2563eb'
+          }}
+        >
+          <Info size={19} />
+        </button>
       </div>
 
-      {/* Unified Master Account Status & Quota Card (Mobile-First, Zero Squeeze) */}
+      {/* Unified Master Account Status & Quota Card */}
       <div
         style={{
           flexShrink: 0,
@@ -388,55 +411,148 @@ export const AccountStatusScreen = () => {
         </div>
       </div>
 
-      {/* Rules & Policy Explainer Card */}
-      <div
-        style={{
-          flexShrink: 0,
-          background: '#ffffff',
-          borderRadius: '20px',
-          padding: '16px 16px',
-          border: '1px solid #f1f5f9',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <Info size={17} color="#2563eb" />
-          <h4
+      {/* Information & Policy Modal */}
+      {showInfoModal && (
+        <div
+          onClick={() => setShowInfoModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            animation: 'modalFadeIn 0.2s ease-out'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
             style={{
-              margin: 0,
-              fontSize: '14px',
-              fontWeight: '800',
-              color: '#0f172a',
-              fontFamily: "'Noto Serif Bengali', serif"
+              position: 'relative',
+              width: '100%',
+              maxWidth: '350px',
+              background: '#ffffff',
+              borderRadius: '24px',
+              padding: '24px 20px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              animation: 'modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
           >
-            অ্যাকাউন্ট সচল রাখার নিয়মাবলী
-          </h4>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                    color: '#2563eb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Info size={20} />
+                </div>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: '16px',
+                    fontWeight: '900',
+                    color: '#0f172a',
+                    fontFamily: "'Noto Serif Bengali', serif"
+                  }}
+                >
+                  অ্যাকাউন্ট সচল রাখার নিয়মাবলী
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setShowInfoModal(false)}
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  background: '#f1f5f9',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#64748b'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Explainer Points */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                fontSize: '13px',
+                color: '#334155',
+                lineHeight: '1.5',
+                fontFamily: "'Noto Serif Bengali', serif"
+              }}
+            >
+              <div style={{ display: 'flex', gap: '10px', background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
+                <span style={{ fontWeight: '900', color: '#2563eb', flexShrink: 0 }}>১.</span>
+                <span>
+                  <strong>প্রতিদিন ১টি রেফার:</strong> অ্যাকাউন্ট সার্বক্ষণিক অ্যাক্টিভ ও সুরক্ষিত রাখতে প্রতিদিন অন্তত ১ জন বন্ধুকে রেফার করতে হবে।
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
+                <span style={{ fontWeight: '900', color: '#f59e0b', flexShrink: 0 }}>২.</span>
+                <span>
+                  <strong>মিস করলে কোটা বৃদ্ধি:</strong> কোনো দিন রেফার না করলে বা অফলাইনে থাকলে পরবর্তী দিন কোটা বৃদ্ধি পাবে (যেমন: ১ দিন মিস হলে কোটা হবে ২টি, ২ দিন মিস হলে ৩টি)।
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', background: '#f8fafc', padding: '10px 12px', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
+                <span style={{ fontWeight: '900', color: '#16a34a', flexShrink: 0 }}>৩.</span>
+                <span>
+                  <strong>কোটা পূরণে রিকভারি:</strong> বর্ধিত কোটা পূরণ করা মাত্র অ্যাকাউন্ট সাথে সাথে Active হবে এবং পূর্ববর্তী সব পেনাল্টি মাফ হয়ে উইথড্র চালু হবে।
+                </span>
+              </div>
+            </div>
+
+            {/* Understood Button */}
+            <button
+              onClick={() => {
+                sounds.playClick();
+                setShowInfoModal(false);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '14px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)',
+                fontFamily: "'Noto Serif Bengali', serif"
+              }}
+            >
+              বুঝেছি
+            </button>
+          </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12px', color: '#334155', fontFamily: "'Noto Serif Bengali', serif" }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span style={{ fontWeight: '900', color: '#2563eb', flexShrink: 0 }}>১.</span>
-            <span>
-              <strong>প্রতিদিন ১টি রেফার:</strong> অ্যাকাউন্ট সার্বক্ষণিক অ্যাক্টিভ ও সুরক্ষিত রাখতে প্রতিদিন অন্তত ১ জন বন্ধুকে রেফার করতে হবে।
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span style={{ fontWeight: '900', color: '#f59e0b', flexShrink: 0 }}>২.</span>
-            <span>
-              <strong>মিস করলে কোটা বৃদ্ধি:</strong> কোনো দিন রেফার না করলে বা অফলাইনে থাকলে পরবর্তী দিন কোটা বৃদ্ধি পাবে (যেমন: ১ দিন মিস হলে কোটা হবে ২টি, ২ দিন মিস হলে ৩টি)।
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span style={{ fontWeight: '900', color: '#16a34a', flexShrink: 0 }}>৩.</span>
-            <span>
-              <strong>কোটা পূরণে রিকভারি:</strong> বর্ধিত কোটা পূরণ করা মাত্র অ্যাকাউন্ট সাথে সাথে Active হবে এবং পূর্ববর্তী সব পেনাল্টি মাফ হয়ে উইথড্র চালু হবে।
-            </span>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
