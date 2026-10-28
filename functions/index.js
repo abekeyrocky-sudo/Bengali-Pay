@@ -417,21 +417,21 @@ async function sendWelcome(chatId, user) {
     inline_keyboard: [
       [
         {
-          text: "Start",
+          text: "অ্যাপ খুলুন",
           web_app: { url: APP_URL },
           style: "success"
         }
       ],
       [
         {
-          text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+          text: "অফিসিয়াল চ্যানেল",
           url: "https://t.me/BengaliPay",
           style: "danger"
         }
       ],
       [
         {
-          text: "সাহায্য ও নিয়ম",
+          text: "নিয়ম ও সাহায্য",
           callback_data: "help_info",
           style: "success"
         }
@@ -480,14 +480,14 @@ async function sendHelp(chatId) {
     inline_keyboard: [
       [
         {
-          text: "Start",
+          text: "অ্যাপ খুলুন",
           web_app: { url: APP_URL },
           style: "success"
         }
       ],
       [
         {
-          text: "অফিসিয়াল গ্রুপ / চ্যানেল",
+          text: "অফিসিয়াল চ্যানেল",
           url: "https://t.me/BengaliPay",
           style: "danger"
         }
@@ -627,6 +627,8 @@ export const telegramBot = onRequest(
         }
         if (cb.data === "help_info" && chatId) {
           await sendHelp(chatId);
+        } else if (cb.data === "main_menu" && chatId) {
+          await sendWelcome(chatId, cb.from || {});
         }
         await telegramApi("answerCallbackQuery", {
           callback_query_id: cb.id
