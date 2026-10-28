@@ -438,6 +438,9 @@ export const AppProvider = ({ children }) => {
             setReferralBonus(remoteData.referralBonus);
             setUserStorage('referral_bonus', String(remoteData.referralBonus));
           }
+          if (remoteData.referralCompleted) {
+            setUserStorage('referral_claimed', 'true');
+          }
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
           if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
           if (Array.isArray(remoteData.notifications)) {

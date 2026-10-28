@@ -218,6 +218,17 @@ async function processReferralReward(newUser, referrerParam) {
       }
     }
 
+    // Additional safeguard: check if user was already rewarded in referrals collection
+    const existingRefSnap = await db.collection("referrals")
+      .where("referredUserId", "==", newTgId)
+      .limit(1)
+      .get();
+    if (!existingRefSnap.empty) {
+      logger.info(`User ${newTgId} already exists in referrals collection. Duplicate reward blocked.`);
+      await newUserDocRef.set({ referralCompleted: true }, { merge: true });
+      return { success: false, reason: "already_referred" };
+    }
+
     // 3. Verify Telegram Channel Membership (@BengaliPay)
     // The referred user MUST be joined in the Telegram channel to count as an Active Refer
     let isChannelMember = false;
