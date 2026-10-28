@@ -1,12 +1,58 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
-import { ShieldCheck, ArrowRight, X } from 'lucide-react';
+import { ShieldCheck, ArrowRight, X, Clock } from 'lucide-react';
 
 export const AccountQuotaReminderModal = () => {
   const { referralQuota, navigateTo, currentScreen } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const hasTriggeredRef = useRef(false);
+
+  // Live 6:00 AM reset countdown timer
+  const [timeLeft, setTimeLeft] = useState({
+    hours: '00',
+    minutes: '00',
+    seconds: '00'
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const calculateTimeLeft = () => {
+      const now = Date.now();
+      let targetMs = referralQuota?.nextResetMs;
+
+      // Fallback: calculate next 6:00 AM BD Time (UTC+6) directly if not yet received
+      if (!targetMs || targetMs <= now) {
+        const cycleDate = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Dhaka',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date(now - 6 * 3600 * 1000));
+        const [year, month, day] = cycleDate.split('-').map(Number);
+        targetMs = Date.UTC(year, month - 1, day + 1, 0, 0, 0);
+      }
+
+      const diffSec = Math.max(0, Math.floor((targetMs - now) / 1000));
+      const hours = Math.floor(diffSec / 3600);
+      const minutes = Math.floor((diffSec % 3600) / 60);
+      const seconds = diffSec % 60;
+
+      return {
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+        seconds: String(seconds).padStart(2, '0')
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, referralQuota?.nextResetMs]);
 
   useEffect(() => {
     // 15 seconds timer after app mount
@@ -156,40 +202,57 @@ export const AccountQuotaReminderModal = () => {
           আপনার অ্যাকাউন্ট সচল ও নিরাপদ রাখতে আজকের নির্ধারিত মিশন সম্পন্ন করুন।
         </p>
 
-        {/* Quota Progress Pill */}
+        {/* Time Remaining Countdown Pill */}
         <div
           style={{
             width: '100%',
-            background: '#f8fafc',
-            border: '1px solid #f1f5f9',
+            background: isWarning ? '#fff1f2' : '#f8fafc',
+            border: isWarning ? '1px solid #fecdd3' : '1px solid #e2e8f0',
             borderRadius: '14px',
             padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '18px'
+            marginBottom: '18px',
+            boxSizing: 'border-box'
           }}
         >
-          <span
-            style={{
-              fontSize: '12px',
-              fontWeight: '700',
-              color: '#64748b',
-              fontFamily: "'Noto Serif Bengali', serif"
-            }}
-          >
-            আজকের টার্গেট:
-          </span>
-          <span
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Clock size={16} color={isWarning ? '#dc2626' : '#2563eb'} />
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                color: isWarning ? '#991b1b' : '#475569',
+                fontFamily: "'Noto Serif Bengali', serif"
+              }}
+            >
+              সময় বাকি:
+            </span>
+          </div>
+          <div
             style={{
               fontSize: '13px',
               fontWeight: '900',
-              fontFamily: "'Outfit', sans-serif",
-              color: isWarning ? '#dc2626' : '#2563eb'
+              fontFamily: "'Outfit', monospace",
+              color: isWarning ? '#b91c1c' : '#1d4ed8',
+              background: '#ffffff',
+              padding: '4px 10px',
+              borderRadius: '8px',
+              border: isWarning ? '1px solid #fecaca' : '1px solid #dbeafe',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              letterSpacing: '0.5px'
             }}
           >
-            {todayReferralCount} / {currentDailyQuota} রেফার
-          </span>
+            <span>{timeLeft.hours}</span>
+            <span style={{ opacity: 0.5 }}>:</span>
+            <span>{timeLeft.minutes}</span>
+            <span style={{ opacity: 0.5 }}>:</span>
+            <span>{timeLeft.seconds}</span>
+          </div>
         </div>
 
         {/* Primary Action Button (Navigate to Account Status) */}
