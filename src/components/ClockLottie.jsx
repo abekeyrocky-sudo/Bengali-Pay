@@ -36,3 +36,4 @@ export const ClockLottie = ({ size = 20, style = {} }) => {
     />
   );
 };
+
