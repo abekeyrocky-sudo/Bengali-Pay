@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import { saveUserToFirestore } from '../firebase';
-import { ShieldCheck, ArrowRight, X, Clock, Lock } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, ArrowRight, X, Clock, Lock } from 'lucide-react';
 
 const MAX_DAILY_SKIPS = 2;
 
@@ -49,8 +49,15 @@ export const AccountQuotaReminderModal = () => {
     setSkipCount(getStoredSkipCount());
   }, [isOpen]);
 
-  const canSkip = skipCount < MAX_DAILY_SKIPS;
-  const remainingSkips = Math.max(0, MAX_DAILY_SKIPS - skipCount);
+  const currentDailyQuota = referralQuota?.currentDailyQuota ?? 1;
+  const todayReferralCount = referralQuota?.todayReferralCount ?? 0;
+  const missedDaysCount = referralQuota?.missedDaysCount ?? 0;
+  const isWarning = referralQuota?.accountStatus === 'WARNING';
+  
+  // Real Punishment Check: If user failed yesterday's mission and has penalty, ZERO SKIPS allowed!
+  const isPenalized = isWarning || missedDaysCount > 0;
+  const canSkip = !isPenalized && (skipCount < MAX_DAILY_SKIPS);
+  const remainingSkips = isPenalized ? 0 : Math.max(0, MAX_DAILY_SKIPS - skipCount);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -92,7 +99,8 @@ export const AccountQuotaReminderModal = () => {
   }, [isOpen, referralQuota?.nextResetMs]);
 
   useEffect(() => {
-    // 15 seconds timer after app mount
+    // If penalized, trigger quickly after mount (1.2s); normal days wait 15s
+    const delay = isPenalized ? 1200 : 15000;
     const timer = setTimeout(() => {
       // Trigger once per app session if quota is not yet met
       if (!hasTriggeredRef.current) {
@@ -108,10 +116,10 @@ export const AccountQuotaReminderModal = () => {
           } catch (e) {}
         }
       }
-    }, 15000); // exactly 15s
+    }, delay);
 
     return () => clearTimeout(timer);
-  }, [referralQuota]);
+  }, [referralQuota, isPenalized]);
 
   if (!isOpen) return null;
 
@@ -119,10 +127,6 @@ export const AccountQuotaReminderModal = () => {
   if (currentScreen === 'game' || currentScreen === 'account-status' || currentScreen === 'invite') {
     return null;
   }
-
-  const currentDailyQuota = referralQuota?.currentDailyQuota ?? 1;
-  const todayReferralCount = referralQuota?.todayReferralCount ?? 0;
-  const isWarning = referralQuota?.accountStatus === 'WARNING';
 
   const handleGoToStatus = () => {
     sounds.playClick();
@@ -182,15 +186,17 @@ export const AccountQuotaReminderModal = () => {
           borderRadius: '26px',
           padding: '26px 20px 20px',
           textAlign: 'center',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          border: '1px solid rgba(0, 0, 0, 0.05)',
+          boxShadow: isPenalized
+            ? '0 25px 50px -12px rgba(239, 68, 68, 0.45)'
+            : '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+          border: isPenalized ? '1.5px solid #fca5a5' : '1px solid rgba(0, 0, 0, 0.05)',
           animation: 'modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center'
         }}
       >
-        {/* Close Button Top-Right (Active if canSkip, Locked if 2 skips exhausted) */}
+        {/* Close Button Top-Right (Active only if not penalized and has skips left) */}
         {canSkip ? (
           <button
             onClick={handleSkip}
@@ -227,7 +233,7 @@ export const AccountQuotaReminderModal = () => {
               justifyContent: 'center',
               color: '#dc2626'
             }}
-            title="আজকের স্কিপ সীমা শেষ"
+            title={isPenalized ? "পেনাল্টি সক্রিয়: স্কিপ নিষিদ্ধ" : "আজকের স্কিপ সীমা শেষ"}
           >
             <Lock size={14} />
           </div>
@@ -239,7 +245,7 @@ export const AccountQuotaReminderModal = () => {
             width: '64px',
             height: '64px',
             borderRadius: '20px',
-            background: isWarning
+            background: isPenalized
               ? 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)'
               : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
             display: 'flex',
@@ -247,13 +253,17 @@ export const AccountQuotaReminderModal = () => {
             justifyContent: 'center',
             marginBottom: '14px',
             border: '3px solid #ffffff',
-            boxShadow: isWarning
-              ? '0 8px 20px rgba(239, 68, 68, 0.18)'
+            boxShadow: isPenalized
+              ? '0 8px 20px rgba(239, 68, 68, 0.25)'
               : '0 8px 20px rgba(37, 99, 235, 0.18)',
-            color: isWarning ? '#dc2626' : '#2563eb'
+            color: isPenalized ? '#dc2626' : '#2563eb'
           }}
         >
-          <ShieldCheck size={32} />
+          {isPenalized ? (
+            <AlertTriangle size={32} />
+          ) : (
+            <ShieldCheck size={32} />
+          )}
         </div>
 
         {/* Title */}
@@ -262,11 +272,11 @@ export const AccountQuotaReminderModal = () => {
             margin: '0 0 6px 0',
             fontSize: '18px',
             fontWeight: '900',
-            color: '#0f172a',
+            color: isPenalized ? '#991b1b' : '#0f172a',
             fontFamily: "'Noto Serif Bengali', serif"
           }}
         >
-          দৈনিক মিশন বাকি আছে
+          {isPenalized ? 'অ্যাকাউন্ট পেনাল্টি সতর্কতা! ⚠️' : 'দৈনিক মিশন বাকি আছে'}
         </h3>
 
         {/* Message */}
@@ -280,7 +290,9 @@ export const AccountQuotaReminderModal = () => {
             fontWeight: canSkip ? 'normal' : '600'
           }}
         >
-          {canSkip
+          {isPenalized
+            ? `পূর্ববর্তী দিনে মিশন সম্পন্ন না করায় অ্যাকাউন্টে পেনাল্টি যুক্ত হয়েছে এবং উইথড্র বন্ধ রয়েছে। অ্যাকাউন্ট সচল করতে আজকের ${currentDailyQuota}টি রেফার কোটা পূরণ করা বাধ্যতামূলক (কোনো স্কিপ নেই)।`
+            : canSkip
             ? 'আপনার অ্যাকাউন্ট সচল ও নিরাপদ রাখতে আজকের নির্ধারিত মিশন সম্পন্ন করুন।'
             : '⚠️ আপনার আজকের ২ বার স্কিপ করার সীমা শেষ! অ্যাকাউন্ট সচল রাখতে নিচের বাটনে ট্যাপ করে মিশন দেখুন।'}
         </p>
@@ -346,7 +358,9 @@ export const AccountQuotaReminderModal = () => {
             padding: '13px 16px',
             borderRadius: '16px',
             border: 'none',
-            background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+            background: isPenalized
+              ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
+              : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
             color: '#ffffff',
             fontSize: '14px',
             fontWeight: '800',
@@ -355,16 +369,18 @@ export const AccountQuotaReminderModal = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            boxShadow: '0 6px 18px rgba(22, 163, 74, 0.28)',
+            boxShadow: isPenalized
+              ? '0 6px 18px rgba(220, 38, 38, 0.35)'
+              : '0 6px 18px rgba(22, 163, 74, 0.28)',
             fontFamily: "'Noto Serif Bengali', serif",
             marginBottom: '8px'
           }}
         >
-          <span>স্ট্যাটাস ও মিশন দেখুন</span>
+          <span>{isPenalized ? 'পেনাল্টি কাটাতে মিশন দেখুন' : 'স্ট্যাটাস ও মিশন দেখুন'}</span>
           <ArrowRight size={16} />
         </button>
 
-        {/* Secondary Dismiss Button (Only if user has skips left) */}
+        {/* Secondary Dismiss Button (Only if user has skips left and not penalized) */}
         {canSkip ? (
           <button
             onClick={handleSkip}
@@ -407,7 +423,11 @@ export const AccountQuotaReminderModal = () => {
             }}
           >
             <Lock size={13} color="#ef4444" />
-            <span>আজকের স্কিপ শেষ! অ্যাকাউন্ট সচল রাখতে কোটা পূরণ করুন</span>
+            <span>
+              {isPenalized
+                ? 'পেনাল্টি সক্রিয়! কোনো স্কিপ নেই, কোটা পূরণ বাধ্যতামূলক'
+                : 'আজকের স্কিপ শেষ! অ্যাকাউন্ট সচল রাখতে কোটা পূরণ করুন'}
+            </span>
           </div>
         )}
       </div>
