@@ -375,7 +375,7 @@ export const AccountStatusScreen = () => {
                   fontFamily: "'Noto Serif Bengali', serif"
                 }}
               >
-                {isGoalMet ? 'আজকের মিশন সফল ✅' : 'সময় বাকি (সকাল ৬:০০ টায় রিসেট)'}
+                {isGoalMet ? 'আজকের মিশন সফল ✅' : 'সময় বাকি'}
               </div>
               <div
                 style={{
