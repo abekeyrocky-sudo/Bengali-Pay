@@ -18,10 +18,11 @@ const getCycleDateStr = () => {
   }).format(new Date(now - 6 * 3600 * 1000));
 };
 
-const getStoredSkipCount = () => {
+const getStoredSkipCount = (uid) => {
   try {
     const cycle = getCycleDateStr();
-    const raw = localStorage.getItem('bp_quota_modal_skip_data');
+    const key = uid ? `bp_${uid}_quota_modal_skip_data` : 'bp_quota_modal_skip_data';
+    const raw = localStorage.getItem(key) || (!uid ? localStorage.getItem('bp_quota_modal_skip_data') : null);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.date === cycle) {
@@ -40,7 +41,7 @@ export const AccountQuotaReminderModal = () => {
     isQuotaReminderOpen,
     setIsQuotaReminderOpen
   } = useApp();
-  const [skipCount, setSkipCount] = useState(getStoredSkipCount);
+  const [skipCount, setSkipCount] = useState(() => getStoredSkipCount(userId));
   const hasTriggeredRef = useRef(false);
 
   // Live 6:00 AM reset countdown timer
@@ -50,10 +51,10 @@ export const AccountQuotaReminderModal = () => {
     seconds: '00'
   });
 
-  // Sync skip count on open or cycle change
+  // Sync skip count on open or cycle / user change
   useEffect(() => {
-    setSkipCount(getStoredSkipCount());
-  }, [isQuotaReminderOpen]);
+    setSkipCount(getStoredSkipCount(userId));
+  }, [isQuotaReminderOpen, userId]);
 
   const currentDailyQuota = referralQuota?.currentDailyQuota ?? 1;
   const todayReferralCount = referralQuota?.todayReferralCount ?? 0;
@@ -147,6 +148,8 @@ export const AccountQuotaReminderModal = () => {
     const newCount = skipCount + 1;
     setSkipCount(newCount);
     try {
+      const key = userId ? `bp_${userId}_quota_modal_skip_data` : 'bp_quota_modal_skip_data';
+      localStorage.setItem(key, JSON.stringify({ date: cycle, count: newCount }));
       localStorage.setItem('bp_quota_modal_skip_data', JSON.stringify({ date: cycle, count: newCount }));
       if (userId) {
         saveUserToFirestore(userId, { modalSkipDate: cycle, modalSkipCount: newCount });

@@ -15,6 +15,7 @@ import {
   where
 } from "firebase/firestore";
 import { getDatabase, ref, set, get, onValue } from "firebase/database";
+import { getTelegramUser } from "./utils/telegram";
 
 // Your web app's Firebase configuration loaded from Vite environment variables
 const firebaseConfig = {
@@ -54,7 +55,11 @@ if (typeof window !== "undefined") {
  */
 export const getUserId = () => {
   try {
-    // 1. Check Telegram WebApp user ID
+    // 1. Check robust Telegram user parser (WebApp initDataUnsafe, initData params, or location hash)
+    const tgUser = getTelegramUser();
+    if (tgUser?.id) {
+      return `tg_${String(tgUser.id)}`;
+    }
     const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
     if (tgId !== undefined && tgId !== null) {
       return `tg_${String(tgId)}`;
@@ -63,9 +68,9 @@ export const getUserId = () => {
     // Ignore error
   }
 
-  // 2. Check stored local user ID
+  // 2. Check stored local user ID for standalone web browser testing
   let stored = localStorage.getItem("bp_uid");
-  if (!stored) {
+  if (!stored || stored.startsWith("tg_")) {
     stored = `user_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     localStorage.setItem("bp_uid", stored);
   }
@@ -77,6 +82,10 @@ export const getUserId = () => {
  */
 export const getRawTelegramId = () => {
   try {
+    const tgUser = getTelegramUser();
+    if (tgUser?.id) {
+      return String(tgUser.id);
+    }
     const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
     if (tgId !== undefined && tgId !== null) {
       return String(tgId);

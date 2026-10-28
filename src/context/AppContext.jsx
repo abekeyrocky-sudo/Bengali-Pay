@@ -92,78 +92,134 @@ export const getStreakStatus = (lastDate, streak) => {
 };
 
 export const AppProvider = ({ children }) => {
-  const [userId] = useState(() => getUserId());
+  // 1. Authenticated Telegram User tracking
+  const tgSession = getTelegramUser();
+  const activeTgId = tgSession?.id ? String(tgSession.id) : '';
+  const initialUid = activeTgId ? `tg_${activeTgId}` : getUserId();
+  const [userId, setUserId] = useState(initialUid);
+
+  // Keep userId synchronized if Telegram session resolves after mount
+  useEffect(() => {
+    const currentTg = getTelegramUser();
+    const currentUid = currentTg?.id ? `tg_${currentTg.id}` : getUserId();
+    if (currentUid && currentUid !== userId) {
+      setUserId(currentUid);
+    }
+  }, [userId]);
+
+  // Account Switch Detection on shared device/browser:
+  // If a DIFFERENT Telegram account or user opens the app on this device,
+  // we clear legacy shared keys so the old user's balance and data never leak!
+  const lastActiveUid = typeof window !== 'undefined' ? localStorage.getItem('bp_last_active_uid') : null;
+  const isAccountSwitched = Boolean(lastActiveUid && lastActiveUid !== initialUid);
+
+  if (isAccountSwitched && typeof window !== 'undefined') {
+    const legacyKeys = [
+      'bp_balance', 'bp_tokens', 'bp_spins', 'bp_phone',
+      'bp_referral_count', 'bp_referral_bonus', 'bp_login_streak',
+      'bp_last_login_date', 'bp_notifications', 'bp_tg_id',
+      'bp_user_name', 'bp_first_name', 'bp_username', 'bp_user_photo',
+      'bp_referral_claimed', 'bp_quota_modal_skip_data'
+    ];
+    legacyKeys.forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+  }
+  if (typeof window !== 'undefined') {
+    try { localStorage.setItem('bp_last_active_uid', initialUid); } catch (e) {}
+  }
+
+  // User-scoped storage helper functions: strictly isolates data per user ID
+  const getUserStorage = (key, fallback = null) => {
+    try {
+      if (userId) {
+        const scoped = localStorage.getItem(`bp_${userId}_${key}`);
+        if (scoped !== null) return scoped;
+      }
+      if (!lastActiveUid || lastActiveUid === userId) {
+        return localStorage.getItem(`bp_${key}`);
+      }
+    } catch (e) {}
+    return fallback;
+  };
+
+  const setUserStorage = (key, val) => {
+    try {
+      if (userId) {
+        localStorage.setItem(`bp_${userId}_${key}`, String(val));
+      }
+      localStorage.setItem(`bp_${key}`, String(val));
+    } catch (e) {}
+  };
+
   const isLoaded = useRef(false);
   const lastSavedJson = useRef('');
   const saveTimerRef = useRef(null);
-
-  // Authenticated Telegram User tracking
-  const [tgSession] = useState(() => getTelegramUser());
 
   // String Telegram ID tracking (pure numeric string or empty if web)
   const [userTelegramId, setUserTelegramId] = useState(() => {
     if (tgSession?.id) {
       const sId = String(tgSession.id);
-      localStorage.setItem('bp_tg_id', sId);
+      setUserStorage('tg_id', sId);
       return sId;
     }
-    return localStorage.getItem('bp_tg_id') || '';
+    return getUserStorage('tg_id', '') || '';
   });
 
   // User Telegram Name tracking
   const [userName, setUserName] = useState(() => {
     if (tgSession?.fullName) {
-      localStorage.setItem('bp_user_name', tgSession.fullName);
+      setUserStorage('user_name', tgSession.fullName);
       return tgSession.fullName;
     }
-    return localStorage.getItem('bp_user_name') || 'Rocky';
+    return getUserStorage('user_name', 'Rocky') || 'Rocky';
   });
 
   // User First Name for greetings ("Hi, {firstName}")
   const [userFirstName, setUserFirstName] = useState(() => {
     if (tgSession?.firstName) {
-      localStorage.setItem('bp_first_name', tgSession.firstName);
+      setUserStorage('first_name', tgSession.firstName);
       return tgSession.firstName;
     }
-    return localStorage.getItem('bp_first_name') || 'Rocky';
+    return getUserStorage('first_name', 'Rocky') || 'Rocky';
   });
 
   // User Telegram @username
   const [userUsername, setUserUsername] = useState(() => {
     if (tgSession?.username) {
-      localStorage.setItem('bp_username', tgSession.username);
+      setUserStorage('username', tgSession.username);
       return tgSession.username;
     }
-    return localStorage.getItem('bp_username') || '';
+    return getUserStorage('username', '') || '';
   });
 
   // User Telegram profile avatar
   const [userPhoto, setUserPhoto] = useState(() => {
     if (tgSession?.photoUrl) {
-      localStorage.setItem('bp_user_photo', tgSession.photoUrl);
+      setUserStorage('user_photo', tgSession.photoUrl);
       return tgSession.photoUrl;
     }
-    return localStorage.getItem('bp_user_photo') || '/assets/mascot_boy.jpg';
+    return getUserStorage('user_photo', '/assets/mascot_boy.jpg') || '/assets/mascot_boy.jpg';
   });
 
   // Real database-driven states (starting clean for actual accounts)
   const [balance, setBalance] = useState(() => {
-    const saved = localStorage.getItem('bp_balance');
+    const saved = getUserStorage('balance');
     return saved !== null ? parseFloat(saved) : 0.00;
   });
 
   const [tokens, setTokens] = useState(() => {
-    const saved = localStorage.getItem('bp_tokens');
+    const saved = getUserStorage('tokens');
     return saved !== null ? parseInt(saved, 10) : 0;
   });
 
   const [spinsLeft, setSpinsLeft] = useState(() => {
-    const saved = localStorage.getItem('bp_spins');
+    const saved = getUserStorage('spins');
     return saved !== null ? parseInt(saved, 10) : 3;
   });
 
   const [userPhone, setUserPhone] = useState(() => {
-    return localStorage.getItem('bp_phone') || '';
+    return getUserStorage('phone', '') || '';
   });
 
   const [userLevel, setUserLevel] = useState(1);
@@ -173,23 +229,23 @@ export const AppProvider = ({ children }) => {
   const [soundOn, setSoundOn] = useState(true);
 
   const [referralCount, setReferralCount] = useState(() => {
-    const saved = localStorage.getItem('bp_referral_count');
+    const saved = getUserStorage('referral_count');
     return saved !== null ? parseInt(saved, 10) : 0;
   });
 
   const [referralBonus, setReferralBonus] = useState(() => {
-    const saved = localStorage.getItem('bp_referral_bonus');
+    const saved = getUserStorage('referral_bonus');
     return saved !== null ? parseFloat(saved) : 0;
   });
 
   // 14-Day Login Streak states
   const [loginStreak, setLoginStreak] = useState(() => {
-    const saved = localStorage.getItem('bp_login_streak');
+    const saved = getUserStorage('login_streak');
     return saved ? parseInt(saved, 10) : 0;
   });
 
   const [lastLoginDate, setLastLoginDate] = useState(() => {
-    return localStorage.getItem('bp_last_login_date') || null;
+    return getUserStorage('last_login_date', null);
   });
 
   const [showDailyLoginModal, setShowDailyLoginModal] = useState(false);
@@ -201,12 +257,10 @@ export const AppProvider = ({ children }) => {
   // Real Transactions list (starts clean from DB)
   const [transactions, setTransactions] = useState([]);
 
-
-
   // Notifications State (Clean real notifications, empty by default, synced with Firestore)
   const [notifications, setNotifications] = useState(() => {
     try {
-      const saved = localStorage.getItem('bp_notifications');
+      const saved = getUserStorage('notifications');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
@@ -223,7 +277,7 @@ export const AppProvider = ({ children }) => {
   const markNotificationAsRead = (id) => {
     setNotifications(prev => {
       const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
-      localStorage.setItem('bp_notifications', JSON.stringify(updated));
+      setUserStorage('notifications', JSON.stringify(updated));
       saveUserToFirestore(userId, { notifications: updated });
       return updated;
     });
@@ -232,7 +286,7 @@ export const AppProvider = ({ children }) => {
   const markAllNotificationsAsRead = () => {
     setNotifications(prev => {
       const updated = prev.map(n => ({ ...n, read: true }));
-      localStorage.setItem('bp_notifications', JSON.stringify(updated));
+      setUserStorage('notifications', JSON.stringify(updated));
       saveUserToFirestore(userId, { notifications: updated });
       return updated;
     });
@@ -240,7 +294,7 @@ export const AppProvider = ({ children }) => {
 
   const clearAllNotifications = () => {
     setNotifications([]);
-    localStorage.setItem('bp_notifications', JSON.stringify([]));
+    setUserStorage('notifications', JSON.stringify([]));
     saveUserToFirestore(userId, { notifications: [] });
   };
 
@@ -301,7 +355,7 @@ export const AppProvider = ({ children }) => {
         return prev;
       }
       const updated = [newNotif, ...prev];
-      localStorage.setItem('bp_notifications', JSON.stringify(updated));
+      setUserStorage('notifications', JSON.stringify(updated));
       saveUserToFirestore(userId, { notifications: updated });
       return updated;
     });
@@ -319,7 +373,7 @@ export const AppProvider = ({ children }) => {
   // Process incoming referral if opened with ?startapp=<refParam> or Telegram deep link
   useEffect(() => {
     const refParam = getTelegramStartParam();
-    const alreadyClaimed = localStorage.getItem('bp_referral_claimed');
+    const alreadyClaimed = getUserStorage('referral_claimed');
     if (refParam && !alreadyClaimed) {
       const currentUser = tgSession || {
         id: userTelegramId || userId,
@@ -330,7 +384,7 @@ export const AppProvider = ({ children }) => {
         recordReferralOnBackend(currentUser, refParam)
           .then((res) => {
             if (res && res.ok) {
-              localStorage.setItem('bp_referral_claimed', 'true');
+              setUserStorage('referral_claimed', 'true');
             }
           })
           .catch(() => {});
@@ -341,41 +395,55 @@ export const AppProvider = ({ children }) => {
   // Fetch remote user data once on mount (Safe single fetch, no infinite loop)
   useEffect(() => {
     let isMounted = true;
+    isLoaded.current = false;
+    lastSavedJson.current = '';
 
     getUserFromFirestore(userId)
       .then((remoteData) => {
         if (!isMounted) return;
 
         if (remoteData) {
-          if (remoteData.balance !== undefined) setBalance(remoteData.balance);
-          if (remoteData.tokens !== undefined) setTokens(remoteData.tokens);
-          if (remoteData.spinsLeft !== undefined) setSpinsLeft(remoteData.spinsLeft);
+          if (remoteData.balance !== undefined) {
+            setBalance(remoteData.balance);
+            setUserStorage('balance', remoteData.balance);
+          }
+          if (remoteData.tokens !== undefined) {
+            setTokens(remoteData.tokens);
+            setUserStorage('tokens', remoteData.tokens);
+          }
+          if (remoteData.spinsLeft !== undefined) {
+            setSpinsLeft(remoteData.spinsLeft);
+            setUserStorage('spins', remoteData.spinsLeft);
+          }
           if (remoteData.userLevel !== undefined) setUserLevel(remoteData.userLevel);
           if (remoteData.userXp !== undefined) setUserXp(remoteData.userXp);
-          if (remoteData.phone !== undefined) setUserPhone(remoteData.phone);
+          if (remoteData.phone !== undefined) {
+            setUserPhone(remoteData.phone);
+            setUserStorage('phone', remoteData.phone);
+          }
           if (remoteData.dailyClaimed !== undefined) setDailyClaimed(remoteData.dailyClaimed);
           if (remoteData.loginStreak !== undefined) {
             setLoginStreak(remoteData.loginStreak);
-            localStorage.setItem('bp_login_streak', String(remoteData.loginStreak));
+            setUserStorage('login_streak', String(remoteData.loginStreak));
           }
           if (remoteData.lastLoginDate !== undefined) {
             setLastLoginDate(remoteData.lastLoginDate);
-            localStorage.setItem('bp_last_login_date', remoteData.lastLoginDate);
+            setUserStorage('last_login_date', remoteData.lastLoginDate);
           }
           if (remoteData.referralCount !== undefined) {
             setReferralCount(remoteData.referralCount);
-            localStorage.setItem('bp_referral_count', String(remoteData.referralCount));
+            setUserStorage('referral_count', String(remoteData.referralCount));
           }
           if (remoteData.referralBonus !== undefined) {
             setReferralBonus(remoteData.referralBonus);
-            localStorage.setItem('bp_referral_bonus', String(remoteData.referralBonus));
+            setUserStorage('referral_bonus', String(remoteData.referralBonus));
           }
           if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
           if (Array.isArray(remoteData.tasks)) setTasks(remoteData.tasks);
           if (Array.isArray(remoteData.notifications)) {
             const clean = remoteData.notifications.filter(n => !isLegacyDummyNotification(n));
             setNotifications(clean);
-            localStorage.setItem('bp_notifications', JSON.stringify(clean));
+            setUserStorage('notifications', JSON.stringify(clean));
             if (clean.length !== remoteData.notifications.length) {
               saveUserToFirestore(userId, { notifications: clean });
             }
@@ -396,24 +464,40 @@ export const AppProvider = ({ children }) => {
               missedDaysCount: remoteData.missedDaysCount ?? 0,
               accountStatus: remoteData.accountStatus ?? 'ACTIVE',
               canWithdraw: remoteData.canWithdraw !== false,
-              lastEvaluatedDate: remoteData.lastEvaluatedDate ?? ''
+              lastEvaluatedDate: remoteData.lastEvaluatedDate ?? '',
+              nextResetMs: remoteData.nextResetMs ?? 0
             });
           }
+        } else {
+          // Brand new user document: Start completely fresh! Never inherit old account data!
+          setBalance(0.00);
+          setTokens(0);
+          setSpinsLeft(3);
+          setUserLevel(1);
+          setUserXp(0);
+          setUserPhone('');
+          setDailyClaimed(false);
+          setLoginStreak(0);
+          setLastLoginDate(null);
+          setReferralCount(0);
+          setReferralBonus(0);
+          setTransactions([]);
+          setNotifications([]);
         }
 
         // Initialize lastSaved snapshot
         const initialPayload = {
           telegramId: String(remoteData?.telegramId ?? userTelegramId ?? ''),
           telegramName: remoteData?.telegramName ?? userName,
-          balance: remoteData?.balance ?? balance,
-          tokens: remoteData?.tokens ?? tokens,
-          spinsLeft: remoteData?.spinsLeft ?? spinsLeft,
-          userLevel: remoteData?.userLevel ?? userLevel,
-          userXp: remoteData?.userXp ?? userXp,
-          phone: remoteData?.phone ?? userPhone,
-          dailyClaimed: remoteData?.dailyClaimed ?? dailyClaimed,
-          loginStreak: remoteData?.loginStreak ?? loginStreak,
-          lastLoginDate: remoteData?.lastLoginDate ?? lastLoginDate
+          balance: remoteData?.balance ?? (remoteData ? balance : 0.00),
+          tokens: remoteData?.tokens ?? (remoteData ? tokens : 0),
+          spinsLeft: remoteData?.spinsLeft ?? (remoteData ? spinsLeft : 3),
+          userLevel: remoteData?.userLevel ?? (remoteData ? userLevel : 1),
+          userXp: remoteData?.userXp ?? (remoteData ? userXp : 0),
+          phone: remoteData?.phone ?? (remoteData ? userPhone : ''),
+          dailyClaimed: remoteData?.dailyClaimed ?? false,
+          loginStreak: remoteData?.loginStreak ?? 0,
+          lastLoginDate: remoteData?.lastLoginDate ?? null
         };
         lastSavedJson.current = JSON.stringify(initialPayload);
         isLoaded.current = true;
@@ -426,7 +510,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [userId, tgSession]);
+  }, [userId]);
 
   // Synchronize Daily Active Referral Quota from Cloud Backend
   useEffect(() => {
@@ -437,15 +521,15 @@ export const AppProvider = ({ children }) => {
 
   // Sync state to local storage immediately & Firestore with debouncing
   useEffect(() => {
-    localStorage.setItem('bp_balance', balance.toString());
-    localStorage.setItem('bp_tokens', tokens.toString());
-    localStorage.setItem('bp_spins', spinsLeft.toString());
-    localStorage.setItem('bp_phone', userPhone);
-    if (userTelegramId) localStorage.setItem('bp_tg_id', String(userTelegramId));
-    if (userName) localStorage.setItem('bp_user_name', userName);
-    if (userFirstName) localStorage.setItem('bp_first_name', userFirstName);
-    if (userUsername) localStorage.setItem('bp_username', userUsername);
-    if (userPhoto) localStorage.setItem('bp_user_photo', userPhoto);
+    setUserStorage('balance', balance.toString());
+    setUserStorage('tokens', tokens.toString());
+    setUserStorage('spins', spinsLeft.toString());
+    setUserStorage('phone', userPhone);
+    if (userTelegramId) setUserStorage('tg_id', String(userTelegramId));
+    if (userName) setUserStorage('user_name', userName);
+    if (userFirstName) setUserStorage('first_name', userFirstName);
+    if (userUsername) setUserStorage('username', userUsername);
+    if (userPhoto) setUserStorage('user_photo', userPhoto);
 
     // Only save to Firestore if remote load is finished
     if (!isLoaded.current) return;
@@ -542,8 +626,8 @@ export const AppProvider = ({ children }) => {
     setLastLoginDate(today);
     setDailyClaimed(true);
 
-    localStorage.setItem('bp_login_streak', String(dayToClaim));
-    localStorage.setItem('bp_last_login_date', today);
+    setUserStorage('login_streak', String(dayToClaim));
+    setUserStorage('last_login_date', today);
 
     const rewardText = rewardItem.type === 'token' ? `${rewardItem.amount}টি সিগারেট টোকেন` : `৳${rewardItem.amount}`;
     addNotification({
@@ -653,7 +737,7 @@ export const AppProvider = ({ children }) => {
   const getStoredSkipCount = () => {
     try {
       const cycle = getQuotaCycleDate();
-      const raw = localStorage.getItem('bp_quota_modal_skip_data');
+      const raw = getUserStorage('quota_modal_skip_data');
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && parsed.date === cycle) {
