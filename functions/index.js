@@ -209,16 +209,32 @@ async function processReferralReward(newUser, referrerParam) {
     const newUserDocRef = db.collection("users").doc(`tg_${newTgId}`);
     const newUserSnap = await newUserDocRef.get();
 
-    // 2. Prevent duplicate referral: check if new user already has a referredBy
+    // 2. Prevent duplicate referral: check if new user already completed a referral
     if (newUserSnap.exists) {
       const data = newUserSnap.data();
-      if (data.referredBy) {
-        logger.info(`User ${newTgId} already referred by ${data.referredBy}. Duplicate ignored.`);
+      if (data.referralCompleted) {
+        logger.info(`User ${newTgId} already completed referral with ${data.referredBy}. Duplicate ignored.`);
         return { success: false, reason: "already_referred" };
       }
     }
 
-    // 3. Find Referrer in Firestore
+    // 3. Verify Telegram Channel Membership (@BengaliPay)
+    // The referred user MUST be joined in the Telegram channel to count as an Active Refer
+    let isChannelMember = false;
+    try {
+      const memberCheck = await telegramApi("getChatMember", {
+        chat_id: "@BengaliPay",
+        user_id: newTgId
+      });
+      if (memberCheck && memberCheck.ok && memberCheck.result) {
+        const status = memberCheck.result.status;
+        isChannelMember = ["creator", "administrator", "member", "restricted"].includes(status);
+      }
+    } catch (e) {
+      logger.warn(`Failed to verify channel membership for ${newTgId}:`, e.message);
+    }
+
+    // 4. Find Referrer in Firestore
     let referrerDocRef = null;
     let referrerTgId = null;
     let referrerData = null;
@@ -259,9 +275,26 @@ async function processReferralReward(newUser, referrerParam) {
       }
     }
 
+    // If NOT yet joined in the channel, store referral as PENDING (not counted as Active Refer yet)
+    if (!isChannelMember) {
+      await newUserDocRef.set(
+        {
+          telegramId: newTgId,
+          referredBy: referrerTgId,
+          referralCompleted: false,
+          referralStatus: "pending_channel_join",
+          referredAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+      logger.info(`User ${newTgId} referred by ${referrerTgId} but NOT in @BengaliPay channel. Stored as pending.`);
+      return { success: false, reason: "channel_not_joined", pending: true };
+    }
+
     const REFER_REWARD = 50; // 50৳ per refer
 
-    // 4. Update Referrer's balance (+50৳), tokens (+50), referral count (+1), referral bonus (+50৳)
+    // 5. Update Referrer's balance (+50৳), tokens (+50), referral count (+1), referral bonus (+50৳)
     // AND update daily referral quota progress & account status (6 AM Cycle)!
     const todayBD = getBangladesh6amCycleDate();
     const prevRefData = referrerData || {};
@@ -288,18 +321,20 @@ async function processReferralReward(newUser, referrerParam) {
       { merge: true }
     );
 
-    // 5. Update New User record with referredBy
+    // 6. Update New User record with completed referral
     await newUserDocRef.set(
       {
         telegramId: newTgId,
         referredBy: referrerTgId,
+        referralCompleted: true,
+        referralStatus: "active",
         referredAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
       },
       { merge: true }
     );
 
-    // 6. Record entry in `referrals` collection
+    // 7. Record entry in `referrals` collection
     const newUserName = [newUser.first_name, newUser.last_name].filter(Boolean).join(" ") || newUser.first_name || newUser.username || "নতুন বন্ধু";
     await db.collection("referrals").add({
       referrerId: referrerTgId,
@@ -309,17 +344,18 @@ async function processReferralReward(newUser, referrerParam) {
       createdAt: FieldValue.serverTimestamp()
     });
 
-    // 7. Send Telegram Bot Notification to Referrer (Original Professional Text Format with Styled Buttons)
+    // 8. Send Telegram Bot Notification to Referrer (Original Professional Text Format with Styled Buttons)
     const newTotalCount = ((referrerData?.referralCount || 0) + 1);
     const notifyMessage = 
-`🎉 <b>অভিনন্দন! নতুন রেফারেল সফল হয়েছে!</b>
+`🎉 <b>অভিনন্দন! নতুন সক্রিয় রেফারেল সফল হয়েছে!</b>
 
-👤 <b>${newUserName}</b> আপনার রেফারেল লিংক দিয়ে Bengali Pay-তে জয়েন করেছেন।
+👤 <b>${newUserName}</b> আপনার রেফারেল লিংক দিয়ে যুক্ত হয়ে অফিসিয়াল চ্যানেলে জয়েন করেছেন।
 
 💰 আপনার একাউন্টে <b>+৫০৳</b> রেফারেল বোনাস জমা হয়েছে!
 👥 আপনার মোট সফল রেফারেল: <b>${newTotalCount} জন।</b>
+🎯 আজকের কোটা অগ্রগতি: <b>${refTodayCount}/${refQuota}</b>
 
-কামলা দিন, টোকেন কামিয়ে বিকাশ ও নগদে ক্যাশআউট করুন! ৳`;
+অ্যাকাউন্ট সবসময় সচল রাখতে প্রতিদিন নিয়মিত বন্ধুদের আমন্ত্রণ জানান!`;
 
     const baseAppUrl = (APP_URL || "https://bengali-pay.netlify.app/").replace(/\/+$/, "");
     const replyMarkup = {
@@ -525,6 +561,26 @@ export const telegramBot = onRequest(
       if (checkRes && checkRes.ok && checkRes.result) {
         const status = checkRes.result.status;
         const isMember = ["creator", "administrator", "member", "restricted"].includes(status);
+
+        // Auto-finalize pending referral if user has now joined the channel!
+        if (isMember) {
+          try {
+            const userSnap = await db.collection("users").doc(`tg_${cleanId}`).get();
+            if (userSnap.exists) {
+              const uData = userSnap.data();
+              if (uData.referredBy && !uData.referralCompleted) {
+                logger.info(`User ${cleanId} joined channel! Activating pending referral for ${uData.referredBy}`);
+                await processReferralReward(
+                  { id: cleanId, first_name: uData.telegramFirstName || uData.telegramName || "" },
+                  uData.referredBy
+                );
+              }
+            }
+          } catch (e) {
+            logger.warn("Error finalizing pending referral on channel join:", e);
+          }
+        }
+
         res.status(200).json({ ok: true, isMember, status });
       } else {
         res.status(200).json({ ok: true, isMember: false, error: checkRes?.description || "not_member" });
