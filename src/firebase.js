@@ -270,3 +270,27 @@ export const checkChannelMembershipAPI = async (userId) => {
     return { isMember: false, error: err.message };
   }
 };
+
+/**
+ * Sync and evaluate daily referral quota and account active status from backend
+ */
+export const syncReferralQuotaAPI = async (userId, userTelegramId) => {
+  if (!userId) return null;
+  const endpoint = "https://us-central1-bengali-pay.cloudfunctions.net/telegramBot";
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "sync_referral_quota",
+        userId: String(userId),
+        userTelegramId: String(userTelegramId || "")
+      })
+    });
+    const data = await res.json();
+    return data?.result || null;
+  } catch (err) {
+    console.warn("Backend referral quota sync error:", err);
+    return null;
+  }
+};

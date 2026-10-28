@@ -71,6 +71,108 @@ async function telegramApi(method, body = {}) {
 }
 
 /**
+ * Helper to get current Date string in Bangladesh Time (YYYY-MM-DD)
+ */
+function getBangladeshTodayDate() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
+}
+
+/**
+ * Strong Backend Algorithm for Daily Referral Quota & Escalation Tracking
+ * - Daily Base Requirement: 1 active referral per day to maintain active status
+ * - If user misses 1 day (or was offline): Quota escalates by 1 (1 + 1 = 2 referrals required)
+ * - If user misses 2 days: Quota escalates by 2 (1 + 2 = 3 referrals required)
+ * - Formula: Quota = 1 + missedDaysCount
+ * - Once quota is satisfied: accountStatus becomes 'ACTIVE', canWithdraw = true, penalty resets.
+ */
+async function evaluateAndSyncReferralQuota(userId, userTelegramId) {
+  if (!userId && !userTelegramId) {
+    return { success: false, reason: "missing_user_identifier" };
+  }
+
+  const cleanTgId = String(userTelegramId || userId || "").replace(/^tg_/, "").trim();
+  const docId = cleanTgId ? `tg_${cleanTgId}` : String(userId);
+  const userDocRef = db.collection("users").doc(docId);
+  const todayBD = getBangladeshTodayDate();
+
+  try {
+    const userSnap = await userDocRef.get();
+    const userData = userSnap.exists ? (userSnap.data() || {}) : {};
+
+    const lastDate = userData.lastEvaluatedDate || todayBD;
+
+    // Calculate calendar days difference based on Bangladesh Time (Asia/Dhaka)
+    const todayParts = todayBD.split("-").map(Number);
+    const lastParts = lastDate.split("-").map(Number);
+    const todayDateObj = new Date(Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2]));
+    const lastDateObj = new Date(Date.UTC(lastParts[0], lastParts[1] - 1, lastParts[2]));
+    const diffMs = todayDateObj.getTime() - lastDateObj.getTime();
+    const diffDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+
+    let missedDays = typeof userData.missedDaysCount === "number" ? userData.missedDaysCount : 0;
+    let todayCount = typeof userData.todayReferralCount === "number" ? userData.todayReferralCount : 0;
+    let currentQuota = typeof userData.currentDailyQuota === "number" && userData.currentDailyQuota > 0
+      ? userData.currentDailyQuota
+      : 1;
+
+    // If day changed (new day or user returns after offline days)
+    if (diffDays > 0) {
+      const yesterdayTargetMet = todayCount >= currentQuota;
+
+      if (yesterdayTargetMet && diffDays === 1) {
+        // Target was met yesterday and no gap -> reset missed days
+        missedDays = 0;
+      } else {
+        // Missed yesterday's quota or missed multiple offline days
+        const skippedDays = diffDays - (yesterdayTargetMet ? 1 : 0);
+        missedDays += Math.max(1, skippedDays);
+      }
+
+      // Escalation Formula: 1 base quota + number of missed days
+      currentQuota = 1 + missedDays;
+      todayCount = 0; // Reset counter for new day
+    }
+
+    const isCompleted = todayCount >= currentQuota;
+    // Status: ACTIVE if quota met or no missed days; WARNING if currently behind quota
+    const accountStatus = isCompleted ? "ACTIVE" : (missedDays > 0 ? "WARNING" : "ACTIVE");
+    const canWithdraw = isCompleted || missedDays === 0;
+
+    const updatedFields = {
+      lastEvaluatedDate: todayBD,
+      missedDaysCount: missedDays,
+      currentDailyQuota: currentQuota,
+      todayReferralCount: todayCount,
+      accountStatus: accountStatus,
+      canWithdraw: canWithdraw,
+      updatedAt: FieldValue.serverTimestamp()
+    };
+
+    await userDocRef.set(updatedFields, { merge: true });
+
+    logger.info(`Synced quota for ${docId}: Quota=${currentQuota}, Done=${todayCount}, Missed=${missedDays}, Status=${accountStatus}`);
+
+    return {
+      success: true,
+      todayBD,
+      currentDailyQuota: currentQuota,
+      todayReferralCount: todayCount,
+      missedDaysCount: missedDays,
+      accountStatus,
+      canWithdraw
+    };
+  } catch (err) {
+    logger.error(`Error in evaluateAndSyncReferralQuota for ${docId}:`, err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Process referral reward (50৳ per referral) and send Telegram Bot notification
  * @param {Object} newUser - Telegram user object { id, first_name, last_name, username, ... }
  * @param {string} referrerParam - Referrer ID or referral code passed via start / startapp
@@ -146,13 +248,28 @@ async function processReferralReward(newUser, referrerParam) {
 
     const REFER_REWARD = 50; // 50৳ per refer
 
-    // 4. Update Referrer's balance (+50৳), tokens (+50), referral count (+1), and referral bonus (+50৳)
+    // 4. Update Referrer's balance (+50৳), tokens (+50), referral count (+1), referral bonus (+50৳)
+    // AND update daily referral quota progress & account status!
+    const todayBD = getBangladeshTodayDate();
+    const prevRefData = referrerData || {};
+    const refLastDate = prevRefData.lastEvaluatedDate || todayBD;
+    const refTodayCount = (refLastDate === todayBD ? (prevRefData.todayReferralCount || 0) : 0) + 1;
+    const refQuota = (typeof prevRefData.currentDailyQuota === "number" && prevRefData.currentDailyQuota > 0)
+      ? prevRefData.currentDailyQuota
+      : 1;
+    const isTargetMet = refTodayCount >= refQuota;
+
     await referrerDocRef.set(
       {
         telegramId: referrerTgId,
         balance: FieldValue.increment(REFER_REWARD),
         referralCount: FieldValue.increment(1),
         referralBonus: FieldValue.increment(REFER_REWARD),
+        todayReferralCount: refTodayCount,
+        lastEvaluatedDate: todayBD,
+        accountStatus: isTargetMet ? "ACTIVE" : (prevRefData.accountStatus || "ACTIVE"),
+        canWithdraw: isTargetMet ? true : (prevRefData.canWithdraw !== false),
+        missedDaysCount: isTargetMet ? 0 : (prevRefData.missedDaysCount || 0),
         updatedAt: FieldValue.serverTimestamp()
       },
       { merge: true }
@@ -371,6 +488,14 @@ export const telegramBot = onRequest(
       return;
     }
 
+    // Direct API call from Mini App to sync & evaluate daily referral quota
+    if (update.action === "sync_referral_quota") {
+      const { userId, userTelegramId } = update;
+      const result = await evaluateAndSyncReferralQuota(userId, userTelegramId);
+      res.status(200).json({ ok: true, result });
+      return;
+    }
+
     // Direct API call from Mini App to verify @BengaliPay channel membership
     if (update.action === "check_channel_member") {
       const cleanId = String(update.userId || update.user_id || update.userTelegramId || "").replace("tg_", "").trim();
@@ -484,5 +609,25 @@ export const setupMenu = onRequest(
       }
     });
     res.status(200).json(result);
+  }
+);
+
+/**
+ * Dedicated endpoint for Mini App to evaluate and sync referral quota
+ */
+export const syncReferralQuota = onRequest(
+  { cors: true, maxInstances: 15, timeoutSeconds: 30 },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(200).send("syncReferralQuota endpoint active");
+      return;
+    }
+    try {
+      const { userId, userTelegramId } = req.body || {};
+      const result = await evaluateAndSyncReferralQuota(userId, userTelegramId);
+      res.status(200).json({ ok: true, result });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
   }
 );

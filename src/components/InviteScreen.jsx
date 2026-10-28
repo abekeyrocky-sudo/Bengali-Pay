@@ -18,6 +18,7 @@ import inviteHeroBanner from '../assets/invite-hero-banner.png';
 import inviteBottomBanner from '../assets/invite-bottom-banner.png';
 import inviteTeamArt from '../assets/invite-team-art.png';
 import inviteGiftArt from '../assets/invite-gift-art.png';
+import { ReferralQuotaCard } from './ReferralQuotaCard';
 
 export const InviteScreen = () => {
   const { userId, userTelegramId, balance = 0, referralCount = 0, referralBonus = 0, navigateTo, notifySuccess, addNotification } = useApp();
@@ -343,6 +344,9 @@ export const InviteScreen = () => {
           />
         </div>
       </div>
+
+      {/* Daily Referral Quota & Escalation Tracker Card */}
+      <ReferralQuotaCard />
 
       {/* 5. Share Card (আপনার রেফারেল লিংক শেয়ার করুন) */}
       <div style={{

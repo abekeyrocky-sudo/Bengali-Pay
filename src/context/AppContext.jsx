@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { sounds } from '../utils/audio';
-import { getUserId, getUserFromFirestore, saveUserToFirestore, recordReferralOnBackend } from '../firebase';
+import { getUserId, getUserFromFirestore, saveUserToFirestore, recordReferralOnBackend, syncReferralQuotaAPI } from '../firebase';
 import { getTelegramUser, getTelegramStartParam } from '../utils/telegram';
 
 const AppContext = createContext();
@@ -244,6 +244,35 @@ export const AppProvider = ({ children }) => {
     saveUserToFirestore(userId, { notifications: [] });
   };
 
+  // Referral Quota & Account Active Maintenance Algorithm State
+  const [referralQuota, setReferralQuota] = useState({
+    currentDailyQuota: 1,
+    todayReferralCount: 0,
+    missedDaysCount: 0,
+    accountStatus: 'ACTIVE', // 'ACTIVE' | 'WARNING'
+    canWithdraw: true,
+    lastEvaluatedDate: ''
+  });
+
+  const refreshReferralQuota = async () => {
+    if (!userId) return;
+    try {
+      const res = await syncReferralQuotaAPI(userId, userTelegramId);
+      if (res && res.success) {
+        setReferralQuota({
+          currentDailyQuota: res.currentDailyQuota ?? 1,
+          todayReferralCount: res.todayReferralCount ?? 0,
+          missedDaysCount: res.missedDaysCount ?? 0,
+          accountStatus: res.accountStatus ?? 'ACTIVE',
+          canWithdraw: res.canWithdraw !== false,
+          lastEvaluatedDate: res.todayBD ?? ''
+        });
+      }
+    } catch (e) {
+      console.warn("Could not sync referral quota:", e);
+    }
+  };
+
   const addNotification = ({ category = 'rewards', type = 'reward', title = 'নতুন নোটিফিকেশন', message = '' }) => {
     const now = new Date();
     const hours = now.getHours();
@@ -356,6 +385,18 @@ export const AppProvider = ({ children }) => {
           if (remoteData.telegramUsername && !tgSession?.username) setUserUsername(remoteData.telegramUsername);
           if (remoteData.photoUrl && !tgSession?.photoUrl) setUserPhoto(remoteData.photoUrl);
           if (remoteData.telegramId && !tgSession?.id) setUserTelegramId(String(remoteData.telegramId));
+
+          // Restore referral quota if available
+          if (remoteData.currentDailyQuota !== undefined) {
+            setReferralQuota({
+              currentDailyQuota: remoteData.currentDailyQuota ?? 1,
+              todayReferralCount: remoteData.todayReferralCount ?? 0,
+              missedDaysCount: remoteData.missedDaysCount ?? 0,
+              accountStatus: remoteData.accountStatus ?? 'ACTIVE',
+              canWithdraw: remoteData.canWithdraw !== false,
+              lastEvaluatedDate: remoteData.lastEvaluatedDate ?? ''
+            });
+          }
         }
 
         // Initialize lastSaved snapshot
@@ -384,6 +425,13 @@ export const AppProvider = ({ children }) => {
       isMounted = false;
     };
   }, [userId, tgSession]);
+
+  // Synchronize Daily Active Referral Quota from Cloud Backend
+  useEffect(() => {
+    if (userId) {
+      refreshReferralQuota();
+    }
+  }, [userId, userTelegramId]);
 
   // Sync state to local storage immediately & Firestore with debouncing
   useEffect(() => {
@@ -648,7 +696,9 @@ export const AppProvider = ({ children }) => {
         markNotificationAsRead,
         markAllNotificationsAsRead,
         clearAllNotifications,
-        addNotification
+        addNotification,
+        referralQuota,
+        refreshReferralQuota
       }}
     >
       {children}

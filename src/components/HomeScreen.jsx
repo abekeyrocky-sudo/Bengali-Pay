@@ -16,6 +16,7 @@ import {
 import secondImgBanner from '../assets/2nd-img-banner.jpg';
 import homeBanner3rd from '../assets/home-banner-3rd.jpg';
 import balanceCardBg from '../assets/balance-card-bg.png';
+import { ReferralQuotaCard } from './ReferralQuotaCard';
 
 export const HomeScreen = () => {
   const { 
@@ -236,6 +237,9 @@ export const HomeScreen = () => {
         {/* Space on right side to clearly reveal the BD flag 3D splash embedded in balance-card-bg.png */}
         <div style={{ width: '80px', height: '60px', flexShrink: 0 }} />
       </div>
+
+      {/* Daily Referral Quota & Account Active Maintenance Alert Card */}
+      <ReferralQuotaCard />
 
       {/* Promo Banner: "আজকে কাজ করুন আর বেশি টোকেন জিতুন!" (2nd-img-banner.png) */}
       <div 

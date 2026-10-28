@@ -33,7 +33,8 @@ export const WithdrawScreen = () => {
     notifySuccess,
     notifyWarn,
     notifyFail,
-    addNotification
+    addNotification,
+    referralQuota
   } = useApp();
 
   const [method, setMethod] = useState('bkash'); // 'bkash' or 'nagad'
@@ -104,6 +105,19 @@ export const WithdrawScreen = () => {
       const msg = `আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নেই! (বর্তমান ব্যালেন্স: ৳${balance.toFixed(2)}, তুলতে চেয়েছেন: ৳${numAmount})`;
       setErrorMsg(msg);
       notifyWarn('অপর্যাপ্ত ব্যালেন্স!', msg);
+      return;
+    }
+
+    // Daily Active Referral Quota check (Tamper-proof backend enforcement)
+    if (referralQuota && referralQuota.accountStatus === 'WARNING' && referralQuota.todayReferralCount < referralQuota.currentDailyQuota) {
+      const needed = referralQuota.currentDailyQuota - referralQuota.todayReferralCount;
+      const msg = `অ্যাকাউন্ট সচল রাখতে আজকের রেফারেল কোটা (${referralQuota.todayReferralCount}/${referralQuota.currentDailyQuota}) পূরণ করা আবশ্যক! উইথড্র করার পূর্বে আরও ${needed}টি সফল রেফার সম্পন্ন করুন।`;
+      setErrorMsg(msg);
+      notifyWarn('অ্যাকাউন্ট ভেরিফিকেশন কোটা!', msg, {
+        confirmText: 'রেফার করুন',
+        onConfirm: () => navigateTo('invite'),
+        cancelText: 'বন্ধ করুন'
+      });
       return;
     }
 
