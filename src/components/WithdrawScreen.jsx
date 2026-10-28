@@ -433,49 +433,40 @@ export const WithdrawScreen = () => {
             style={{
               background: method === 'bkash' ? '#fdf2f8' : '#ffffff',
               borderRadius: '16px',
-              padding: '12px 14px',
+              padding: '14px 14px',
               border: method === 'bkash' ? '2px solid #e2136e' : '1.5px solid #e2e8f0',
               cursor: 'pointer',
               boxShadow: method === 'bkash' ? '0 4px 16px rgba(226, 19, 110, 0.14)' : '0 2px 4px rgba(0,0,0,0.02)',
               transition: 'all 0.15s ease',
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              minHeight: '72px'
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{
-                width: '46px',
-                height: '28px',
-                borderRadius: '8px',
-                background: '#e2136e',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '900',
-                fontSize: '12px',
-                fontFamily: "'Outfit', sans-serif"
-              }}>
-                bKash
-              </div>
-
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                border: method === 'bkash' ? '6px solid #16a34a' : '2px solid #cbd5e1',
-                background: '#fff',
-                transition: 'border 0.15s ease'
-              }} />
+            <div style={{
+              width: '52px',
+              height: '30px',
+              borderRadius: '8px',
+              background: '#e2136e',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '900',
+              fontSize: '13px',
+              fontFamily: "'Outfit', sans-serif"
+            }}>
+              bKash
             </div>
 
-            <div style={{ marginTop: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', display: 'block' }}>
-                bKash
-              </span>
-            </div>
+            <div style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              border: method === 'bkash' ? '6px solid #16a34a' : '2px solid #cbd5e1',
+              background: '#fff',
+              transition: 'border 0.15s ease'
+            }} />
           </div>
 
           {/* Nagad Option */}
@@ -484,49 +475,40 @@ export const WithdrawScreen = () => {
             style={{
               background: method === 'nagad' ? '#fff7ed' : '#ffffff',
               borderRadius: '16px',
-              padding: '12px 14px',
+              padding: '14px 14px',
               border: method === 'nagad' ? '2px solid #f97316' : '1.5px solid #e2e8f0',
               cursor: 'pointer',
               boxShadow: method === 'nagad' ? '0 4px 16px rgba(249, 115, 22, 0.14)' : '0 2px 4px rgba(0,0,0,0.02)',
               transition: 'all 0.15s ease',
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              minHeight: '72px'
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{
-                width: '46px',
-                height: '28px',
-                borderRadius: '8px',
-                background: '#f97316',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '900',
-                fontSize: '12px',
-                fontFamily: "'Outfit', sans-serif"
-              }}>
-                Nagad
-              </div>
-
-              <div style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                border: method === 'nagad' ? '6px solid #16a34a' : '2px solid #cbd5e1',
-                background: '#fff',
-                transition: 'border 0.15s ease'
-              }} />
+            <div style={{
+              width: '52px',
+              height: '30px',
+              borderRadius: '8px',
+              background: '#f97316',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '900',
+              fontSize: '13px',
+              fontFamily: "'Outfit', sans-serif"
+            }}>
+              Nagad
             </div>
 
-            <div style={{ marginTop: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', display: 'block' }}>
-                Nagad
-              </span>
-            </div>
+            <div style={{
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              border: method === 'nagad' ? '6px solid #16a34a' : '2px solid #cbd5e1',
+              background: '#fff',
+              transition: 'border 0.15s ease'
+            }} />
           </div>
         </div>
       </div>
