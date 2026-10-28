@@ -296,20 +296,59 @@ export const ProfileScreen = () => {
                 {item.label}
               </span>
 
-              {item.id === 'account-status' && (
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  padding: '2px 8px',
-                  borderRadius: '10px',
-                  background: referralQuota?.accountStatus === 'WARNING' ? '#fee2e2' : '#dcfce7',
-                  color: referralQuota?.accountStatus === 'WARNING' ? '#dc2626' : '#16a34a',
-                  letterSpacing: '0.3px',
-                  textTransform: 'uppercase'
-                }}>
-                  {referralQuota?.accountStatus === 'WARNING' ? 'Warning' : 'Active'}
-                </span>
-              )}
+              {item.id === 'account-status' && (() => {
+                const isWarning = referralQuota?.accountStatus === 'WARNING';
+                const isCompleted = (referralQuota?.todayReferralCount ?? 0) >= (referralQuota?.currentDailyQuota ?? 1);
+
+                if (isWarning) {
+                  return (
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      background: '#fee2e2',
+                      color: '#dc2626',
+                      letterSpacing: '0.3px',
+                      textTransform: 'uppercase'
+                    }}>
+                      Warning
+                    </span>
+                  );
+                }
+
+                if (!isCompleted) {
+                  return (
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      background: '#fee2e2',
+                      color: '#dc2626',
+                      letterSpacing: '0.3px',
+                      textTransform: 'uppercase'
+                    }}>
+                      Inactive
+                    </span>
+                  );
+                }
+
+                return (
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    background: '#dcfce7',
+                    color: '#16a34a',
+                    letterSpacing: '0.3px',
+                    textTransform: 'uppercase'
+                  }}>
+                    Active
+                  </span>
+                );
+              })()}
             </div>
 
             <ChevronRight size={18} color="#94a3b8" />
