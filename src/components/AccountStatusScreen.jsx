@@ -11,9 +11,9 @@ import {
   ChevronRight,
   Info,
   CheckCircle2,
-  X,
-  Clock
+  X
 } from 'lucide-react';
+import { ClockLottie } from './ClockLottie';
 
 export const AccountStatusScreen = () => {
   const { referralQuota, refreshReferralQuota, navigateTo, isQuotaLocked, setIsQuotaReminderOpen } = useApp();
@@ -365,11 +365,10 @@ export const AccountStatusScreen = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: isGoalMet ? '#16a34a' : '#ef4444',
                 flexShrink: 0
               }}
             >
-              <Clock size={15} />
+              <ClockLottie size={22} />
             </div>
             <div>
               <div

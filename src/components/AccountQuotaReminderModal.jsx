@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import { saveUserToFirestore } from '../firebase';
-import { ShieldCheck, AlertTriangle, ArrowRight, X, Clock, Lock } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, ArrowRight, X, Lock } from 'lucide-react';
+import { ClockLottie } from './ClockLottie';
 
 const MAX_DAILY_SKIPS = 2;
 
@@ -313,7 +314,7 @@ export const AccountQuotaReminderModal = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Clock size={16} color="#dc2626" />
+            <ClockLottie size={22} />
             <span
               style={{
                 fontSize: '12px',
