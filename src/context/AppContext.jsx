@@ -202,10 +202,10 @@ export const AppProvider = ({ children }) => {
     return getUserStorage('user_photo', '/assets/mascot_boy.jpg') || '/assets/mascot_boy.jpg';
   });
 
-  // Real database-driven states (starting clean for actual accounts)
+  // Real database-driven states (starting clean for actual accounts, 100 ৳ default welcome bonus for new accounts)
   const [balance, setBalance] = useState(() => {
     const saved = getUserStorage('balance');
-    return saved !== null ? parseFloat(saved) : 0.00;
+    return saved !== null ? parseFloat(saved) : 100.00;
   });
 
   const [tokens, setTokens] = useState(() => {
@@ -404,10 +404,64 @@ export const AppProvider = ({ children }) => {
         if (!isMounted) return;
 
         if (remoteData) {
-          if (remoteData.balance !== undefined) {
-            setBalance(remoteData.balance);
-            setUserStorage('balance', remoteData.balance);
+          let userBal = remoteData.balance;
+          let userTx = Array.isArray(remoteData.transactions) ? remoteData.transactions : [];
+          let userNotif = Array.isArray(remoteData.notifications) ? remoteData.notifications : [];
+
+          // If document exists but balance was never initialized: give 100 ৳ Welcome Bonus!
+          if (userBal === undefined) {
+            userBal = 100.00;
+            const welcomeTx = {
+              id: 'tx_welcome_' + Date.now(),
+              title: 'স্বাগতম বোনাস',
+              type: 'earn',
+              amount: '+100 ৳',
+              date: 'আজ',
+              status: 'সফল',
+              timestamp: Date.now()
+            };
+            const welcomeNotif = {
+              id: 'notif_welcome_' + Date.now(),
+              category: 'rewards',
+              type: 'reward',
+              title: 'স্বাগতম বোনাস! 🎉',
+              message: 'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যোগ করা হয়েছে।',
+              time: 'এইমাত্র',
+              read: false,
+              timestamp: Date.now()
+            };
+            userTx = [welcomeTx, ...userTx];
+            userNotif = [welcomeNotif, ...userNotif];
+            saveUserToFirestore(userId, {
+              balance: userBal,
+              welcomeBonusClaimed: true,
+              transactions: userTx,
+              notifications: userNotif
+            });
+
+            // Trigger Welcome Celebration
+            if (!getUserStorage('welcome_bonus_shown')) {
+              setUserStorage('welcome_bonus_shown', 'true');
+              setTimeout(() => {
+                try {
+                  confetti({
+                    particleCount: 90,
+                    spread: 70,
+                    origin: { y: 0.55 }
+                  });
+                  sounds.playWin();
+                } catch (e) {}
+                notifySuccess(
+                  'স্বাগতম বোনাস! 🎉',
+                  'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যুক্ত করা হয়েছে।'
+                );
+              }, 1200);
+            }
           }
+
+          setBalance(userBal);
+          setUserStorage('balance', userBal);
+
           if (remoteData.tokens !== undefined) {
             setTokens(remoteData.tokens);
             setUserStorage('tokens', remoteData.tokens);
@@ -442,7 +496,9 @@ export const AppProvider = ({ children }) => {
           if (remoteData.referralCompleted) {
             setUserStorage('referral_claimed', 'true');
           }
-          if (Array.isArray(remoteData.transactions)) setTransactions(remoteData.transactions);
+          setTransactions(userTx);
+          setUserStorage('transactions', JSON.stringify(userTx));
+
           if (Array.isArray(remoteData.tasks)) {
             const defaultTasks = [
               { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
@@ -458,13 +514,11 @@ export const AppProvider = ({ children }) => {
             });
             setTasks(normalized);
           }
-          if (Array.isArray(remoteData.notifications)) {
-            const clean = remoteData.notifications.filter(n => !isLegacyDummyNotification(n));
-            setNotifications(clean);
-            setUserStorage('notifications', JSON.stringify(clean));
-            if (clean.length !== remoteData.notifications.length) {
-              saveUserToFirestore(userId, { notifications: clean });
-            }
+          const cleanNotifs = userNotif.filter(n => !isLegacyDummyNotification(n));
+          setNotifications(cleanNotifs);
+          setUserStorage('notifications', JSON.stringify(cleanNotifs));
+          if (cleanNotifs.length !== userNotif.length) {
+            saveUserToFirestore(userId, { notifications: cleanNotifs });
           }
 
           // Restore Telegram metadata if previously tracked in Firestore
@@ -487,8 +541,10 @@ export const AppProvider = ({ children }) => {
             });
           }
         } else {
-          // Brand new user document: Start completely fresh! Never inherit old account data!
-          setBalance(0.00);
+          // Brand new user document: Start fresh with 100 ৳ Welcome Bonus!
+          const welcomeBonus = 100.00;
+          setBalance(welcomeBonus);
+          setUserStorage('balance', welcomeBonus);
           setTokens(0);
           setSpinsLeft(3);
           setUserLevel(1);
@@ -499,15 +555,72 @@ export const AppProvider = ({ children }) => {
           setLastLoginDate(null);
           setReferralCount(0);
           setReferralBonus(0);
-          setTransactions([]);
-          setNotifications([]);
+
+          const initialTransactions = [
+            {
+              id: 'tx_welcome_' + Date.now(),
+              title: 'স্বাগতম বোনাস',
+              type: 'earn',
+              amount: '+100 ৳',
+              date: 'আজ',
+              status: 'সফল',
+              timestamp: Date.now()
+            }
+          ];
+          setTransactions(initialTransactions);
+          setUserStorage('transactions', JSON.stringify(initialTransactions));
+
+          const initialNotifications = [
+            {
+              id: 'notif_welcome_' + Date.now(),
+              category: 'rewards',
+              type: 'reward',
+              title: 'স্বাগতম বোনাস! 🎉',
+              message: 'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যোগ করা হয়েছে।',
+              time: 'এইমাত্র',
+              read: false,
+              timestamp: Date.now()
+            }
+          ];
+          setNotifications(initialNotifications);
+          setUserStorage('notifications', JSON.stringify(initialNotifications));
+
+          saveUserToFirestore(userId, {
+            balance: welcomeBonus,
+            tokens: 0,
+            spinsLeft: 3,
+            userLevel: 1,
+            userXp: 0,
+            welcomeBonusClaimed: true,
+            transactions: initialTransactions,
+            notifications: initialNotifications
+          });
+
+          // Trigger Welcome Celebration
+          if (!getUserStorage('welcome_bonus_shown')) {
+            setUserStorage('welcome_bonus_shown', 'true');
+            setTimeout(() => {
+              try {
+                confetti({
+                  particleCount: 90,
+                  spread: 70,
+                  origin: { y: 0.55 }
+                });
+                sounds.playWin();
+              } catch (e) {}
+              notifySuccess(
+                'স্বাগতম বোনাস! 🎉',
+                'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যুক্ত করা হয়েছে।'
+              );
+            }, 1200);
+          }
         }
 
         // Initialize lastSaved snapshot
         const initialPayload = {
           telegramId: String(remoteData?.telegramId ?? userTelegramId ?? ''),
           telegramName: remoteData?.telegramName ?? userName,
-          balance: remoteData?.balance ?? (remoteData ? balance : 0.00),
+          balance: remoteData?.balance ?? (remoteData ? balance : 100.00),
           tokens: remoteData?.tokens ?? (remoteData ? tokens : 0),
           spinsLeft: remoteData?.spinsLeft ?? (remoteData ? spinsLeft : 3),
           userLevel: remoteData?.userLevel ?? (remoteData ? userLevel : 1),

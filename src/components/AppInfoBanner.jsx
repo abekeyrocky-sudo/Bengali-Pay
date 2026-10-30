@@ -115,6 +115,27 @@ export const AppInfoBanner = () => {
                 width: '24px',
                 height: '24px',
                 borderRadius: '50%',
+                background: '#fef3c7',
+                color: '#d97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '800',
+                fontSize: '12px'
+              }}>
+                🎁
+              </span>
+              <div>
+                <span style={{ color: '#64748b', fontSize: '11px' }}>ওয়েলকাম বোনাস: </span>
+                <span style={{ fontWeight: '800', color: '#16a34a' }}>১০০ ৳ (নতুন একাউন্টে)</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
                 background: '#fce7f3',
                 color: '#db2777',
                 display: 'flex',

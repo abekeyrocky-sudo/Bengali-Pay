@@ -27,27 +27,61 @@ async function trackUserInFirestore(user) {
     const tgIdStr = String(user.id); // Guaranteed String in database
     const docId = `tg_${tgIdStr}`;
     const userRef = db.collection("users").doc(docId);
+    const userSnap = await userRef.get();
+    const existingData = userSnap.exists ? (userSnap.data() || {}) : {};
 
     const firstName = user.first_name ? String(user.first_name).trim() : "";
     const lastName = user.last_name ? String(user.last_name).trim() : "";
     const fullName = [firstName, lastName].filter(Boolean).join(" ") || firstName || user.username || "Rocky";
 
-    await userRef.set(
-      {
-        telegramId: tgIdStr, // Guaranteed String in database
-        rawTelegramId: tgIdStr,
-        telegramName: fullName,
-        telegramFirstName: firstName,
-        telegramUsername: user.username ? String(user.username) : "",
-        isPremium: Boolean(user.is_premium),
-        languageCode: user.language_code || "bn",
-        lastActiveAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
-      },
-      { merge: true }
-    );
+    const payload = {
+      telegramId: tgIdStr, // Guaranteed String in database
+      rawTelegramId: tgIdStr,
+      telegramName: fullName,
+      telegramFirstName: firstName,
+      telegramUsername: user.username ? String(user.username) : "",
+      isPremium: Boolean(user.is_premium),
+      languageCode: user.language_code || "bn",
+      lastActiveAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    };
 
-    logger.info(`Tracked Telegram User in DB: ${docId} (${fullName})`);
+    // If new user or balance never initialized, grant 100 ৳ Welcome Bonus!
+    if (!userSnap.exists || existingData.balance === undefined) {
+      payload.balance = 100.00;
+      payload.tokens = existingData.tokens !== undefined ? existingData.tokens : 0;
+      payload.spinsLeft = existingData.spinsLeft !== undefined ? existingData.spinsLeft : 3;
+      payload.welcomeBonusClaimed = true;
+      payload.transactions = [
+        {
+          id: `tx_welcome_${Date.now()}`,
+          title: "স্বাগতম বোনাস",
+          type: "earn",
+          amount: "+100 ৳",
+          date: "আজ",
+          status: "সফল",
+          timestamp: Date.now()
+        },
+        ...(Array.isArray(existingData.transactions) ? existingData.transactions : [])
+      ];
+      payload.notifications = [
+        {
+          id: `notif_welcome_${Date.now()}`,
+          category: "rewards",
+          type: "reward",
+          title: "স্বাগতম বোনাস! 🎉",
+          message: "Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যোগ করা হয়েছে।",
+          time: "এইমাত্র",
+          read: false,
+          timestamp: Date.now()
+        },
+        ...(Array.isArray(existingData.notifications) ? existingData.notifications : [])
+      ];
+    }
+
+    await userRef.set(payload, { merge: true });
+
+    logger.info(`Tracked Telegram User in DB: ${docId} (${fullName}) with balance: ${payload.balance !== undefined ? payload.balance : existingData.balance}`);
   } catch (err) {
     logger.warn("Firestore user tracking notice:", err.message);
   }
@@ -431,10 +465,11 @@ async function sendWelcome(chatId, user) {
 `<b>স্বাগতম Bengali Pay-তে!</b>
 কামলা দাও, টাস্ক করো আর রিওয়ার্ড কামাও! 
 
+🎁 <b>নতুন অ্যাকাউন্টেই পাচ্ছেন ১০০ ৳ ওয়েলকাম বোনাস!</b>
 গেম • টাস্ক • রেফার
-বিকাশ ও নগদে উত্তোলনের সুযোগ!
+বিকাশ ও নগদে সরাসরি উত্তোলনের সুযোগ!
 
-নিচের বাটনে ক্লিক করে শুরু করুন।`;
+নিচের বাটনে ক্লিক করে অ্যাপ ওপেন করুন:`;
 
   const replyMarkup = {
     inline_keyboard: [
