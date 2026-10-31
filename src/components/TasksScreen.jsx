@@ -5,6 +5,7 @@ import { sounds } from '../utils/audio';
 import { checkChannelMembershipAPI } from '../firebase';
 import { getTelegramWebApp, getActiveTelegramUserId } from '../utils/telegram';
 import { showAdsgramInterstitialAd } from '../utils/adsgram';
+import { showGigaPubAd } from '../utils/gigapub';
 import { 
   Play, 
   Calendar, 
@@ -38,6 +39,8 @@ export const TasksScreen = () => {
     notifySuccess,
     notifyWarn,
     dailyAdsCount,
+    dailyAdsgramCount,
+    dailyGigapubCount,
     lastAdDate,
     recordAdWatch
   } = useApp();
@@ -87,12 +90,13 @@ export const TasksScreen = () => {
     }
   };
 
-  // Handle Adsgram Interstitial Ad Watch (Block ID: int-57158, +20 ৳, Max 5 per day)
+  // Handle Interstitial Ads Watch (3 Adsgram + 3 Gigapub = 6 Ads daily, +20 ৳ per ad)
   const startVideoTask = async () => {
-    if (dailyAdsCount >= 5) {
+    const totalWatched = (dailyAdsgramCount || 0) + (dailyGigapubCount || 0);
+    if (totalWatched >= 6) {
       notifyWarn(
         'দৈনিক লিমিট শেষ!',
-        'আজকের জন্য ৫টি বিজ্ঞাপন দেখার লিমিট পূর্ণ হয়েছে (৫/৫)। আগামীকাল আবার বিজ্ঞাপন দেখতে পারবেন!'
+        'আজকের জন্য ৬টি বিজ্ঞাপন (৩টি Adsgram + ৩টি Gigapub) দেখার লিমিট পূর্ণ হয়েছে (৬/৬)। আগামীকাল আবার দেখতে পারবেন!'
       );
       return;
     }
@@ -101,21 +105,55 @@ export const TasksScreen = () => {
     setIsAdLoading(true);
 
     try {
-      // Trigger official Adsgram Interstitial ad (Block ID: int-57158)
-      const res = await showAdsgramInterstitialAd('int-57158');
+      const canShowAdsgram = (dailyAdsgramCount || 0) < 3;
+      const canShowGigapub = (dailyGigapubCount || 0) < 3;
 
-      if (res && res.done) {
-        const nextCount = recordAdWatch();
+      let showedNetwork = null;
+      let adResult = null;
+
+      // Smart rotation & seamless failover between Adsgram and Gigapub
+      if (canShowAdsgram && (!canShowGigapub || (dailyAdsgramCount || 0) <= (dailyGigapubCount || 0))) {
+        // Try Adsgram Interstitial (int-57158)
+        const agRes = await showAdsgramInterstitialAd('int-57158');
+        if (agRes && agRes.done) {
+          showedNetwork = 'adsgram';
+          adResult = agRes;
+        } else if (canShowGigapub) {
+          // Seamless fallback to Gigapub if Adsgram had no fill
+          const gpRes = await showGigaPubAd();
+          if (gpRes && gpRes.done) {
+            showedNetwork = 'gigapub';
+            adResult = gpRes;
+          }
+        }
+      } else if (canShowGigapub) {
+        // Try Gigapub Interstitial (id: 8909)
+        const gpRes = await showGigaPubAd();
+        if (gpRes && gpRes.done) {
+          showedNetwork = 'gigapub';
+          adResult = gpRes;
+        } else if (canShowAdsgram) {
+          // Seamless fallback to Adsgram if Gigapub had no fill
+          const agRes = await showAdsgramInterstitialAd('int-57158');
+          if (agRes && agRes.done) {
+            showedNetwork = 'adsgram';
+            adResult = agRes;
+          }
+        }
+      }
+
+      if (showedNetwork && adResult?.done) {
+        const stats = recordAdWatch(showedNetwork);
         earnReward(20, 0, 'বিজ্ঞাপন দেখার পুরস্কার');
         
         notifySuccess(
           'বিজ্ঞাপন সম্পন্ন! 🎉',
-          `+২০ ৳ সফলভাবে আপনার অ্যাকাউন্টে যোগ হয়েছে! (আজকের অগ্রগতি: ${nextCount}/৫)`
+          `+২০ ৳ সফলভাবে আপনার অ্যাকাউন্টে যোগ হয়েছে! (আজকের অগ্রগতি: ${stats.total}/৬)`
         );
       } else {
         notifyWarn(
           'বিজ্ঞাপন সম্পন্ন হয়নি!',
-          'বিজ্ঞাপন লোড হতে সমস্যা হয়েছে অথবা বন্ধ করা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
+          'বিজ্ঞাপন লোড হতে সমস্যা হয়েছে বা বন্ধ করা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
         );
       }
     } catch (err) {
@@ -297,7 +335,7 @@ export const TasksScreen = () => {
         gap: '12px'
       }}>
         {tasks.map((task) => {
-          const isDone = task.done || (task.id === 'daily' && dailyClaimed) || (task.id === 'video' && dailyAdsCount >= 5);
+          const isDone = task.done || (task.id === 'daily' && dailyClaimed) || (task.id === 'video' && dailyAdsCount >= 6);
 
           return (
             <div
@@ -352,7 +390,7 @@ export const TasksScreen = () => {
                         borderRadius: '8px',
                         textDecoration: 'none'
                       }}>
-                        {dailyAdsCount}/৫
+                        {dailyAdsCount}/৬
                       </span>
                     )}
                   </h4>

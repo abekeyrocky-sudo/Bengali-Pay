@@ -30,3 +30,4 @@ export const showGigaPubAd = async () => {
   console.warn('Gigapub SDK not ready or showGiga is undefined.');
   return { done: false, error: true, description: 'Gigapub SDK not loaded' };
 };
+

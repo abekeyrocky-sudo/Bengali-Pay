@@ -255,18 +255,28 @@ export const AppProvider = ({ children }) => {
   const streakStatus = getStreakStatus(lastLoginDate, loginStreak);
   const [dailyClaimed, setDailyClaimed] = useState(!streakStatus.canClaimToday);
 
-  // Daily Adsgram Interstitial Ads Watch State (Max 5 per day, resets daily)
-  const [dailyAdsCount, setDailyAdsCount] = useState(() => {
+  // Daily Ads Watch State (3 Adsgram + 3 Gigapub = Max 6 per day, resets daily)
+  const [dailyAdsgramCount, setDailyAdsgramCount] = useState(() => {
     const today = getLocalDateString();
     const savedDate = getUserStorage('last_ad_date');
     if (savedDate !== today) return 0;
-    const savedCount = getUserStorage('daily_ads_count');
-    return savedCount ? parseInt(savedCount, 10) : 0;
+    const saved = getUserStorage('daily_adsgram_count');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const [dailyGigapubCount, setDailyGigapubCount] = useState(() => {
+    const today = getLocalDateString();
+    const savedDate = getUserStorage('last_ad_date');
+    if (savedDate !== today) return 0;
+    const saved = getUserStorage('daily_gigapub_count');
+    return saved ? parseInt(saved, 10) : 0;
   });
 
   const [lastAdDate, setLastAdDate] = useState(() => {
     return getUserStorage('last_ad_date', null);
   });
+
+  const dailyAdsCount = (dailyAdsgramCount || 0) + (dailyGigapubCount || 0);
 
   // Real Transactions list (starts clean from DB)
   const [transactions, setTransactions] = useState([]);
@@ -385,26 +395,43 @@ export const AppProvider = ({ children }) => {
     { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
   ]);
 
-  // Record an ad watch and update daily progress (max 5 ads per day)
-  const recordAdWatch = () => {
+  // Record an ad watch and update daily progress (3 Adsgram + 3 Gigapub = 6 total)
+  const recordAdWatch = (network = 'adsgram') => {
     const today = getLocalDateString();
-    const currentCount = (lastAdDate === today) ? (dailyAdsCount || 0) : 0;
-    const nextCount = Math.min(5, currentCount + 1);
-    setDailyAdsCount(nextCount);
-    setLastAdDate(today);
-    setUserStorage('daily_ads_count', String(nextCount));
-    setUserStorage('last_ad_date', today);
+    const isToday = lastAdDate === today;
+    const currentAg = isToday ? (dailyAdsgramCount || 0) : 0;
+    const currentGp = isToday ? (dailyGigapubCount || 0) : 0;
 
-    if (nextCount >= 5) {
+    let nextAg = currentAg;
+    let nextGp = currentGp;
+
+    if (network === 'gigapub') {
+      nextGp = Math.min(3, currentGp + 1);
+      setDailyGigapubCount(nextGp);
+      setUserStorage('daily_gigapub_count', String(nextGp));
+    } else {
+      nextAg = Math.min(3, currentAg + 1);
+      setDailyAdsgramCount(nextAg);
+      setUserStorage('daily_adsgram_count', String(nextAg));
+    }
+
+    const totalCount = nextAg + nextGp;
+    setLastAdDate(today);
+    setUserStorage('last_ad_date', today);
+    setUserStorage('daily_ads_count', String(totalCount));
+
+    if (totalCount >= 6) {
       setTasks(prev => prev.map(t => t.id === 'video' ? { ...t, done: true } : t));
     }
 
     saveUserToFirestore(userId, {
-      dailyAdsCount: nextCount,
+      dailyAdsgramCount: nextAg,
+      dailyGigapubCount: nextGp,
+      dailyAdsCount: totalCount,
       lastAdDate: today
     });
 
-    return nextCount;
+    return { adsgram: nextAg, gigapub: nextGp, total: totalCount };
   };
 
   // Process incoming referral if opened with ?startapp=<refParam> or Telegram deep link
@@ -521,20 +548,30 @@ export const AppProvider = ({ children }) => {
           setTransactions(userTx);
           setUserStorage('transactions', JSON.stringify(userTx));
 
-          // Restore Adsgram Daily Ads Watch state (resets daily)
+          // Restore Adsgram + Gigapub Daily Ads Watch state (3 Adsgram + 3 Gigapub = 6 total)
           const today = getLocalDateString();
-          let effectiveAds = 0;
-          if (remoteData.lastAdDate === today && typeof remoteData.dailyAdsCount === 'number') {
-            effectiveAds = remoteData.dailyAdsCount;
+          let effectiveAg = 0;
+          let effectiveGp = 0;
+          if (remoteData.lastAdDate === today) {
+            if (typeof remoteData.dailyAdsgramCount === 'number') effectiveAg = remoteData.dailyAdsgramCount;
+            if (typeof remoteData.dailyGigapubCount === 'number') effectiveGp = remoteData.dailyGigapubCount;
+            else if (typeof remoteData.dailyAdsCount === 'number') {
+              effectiveAg = Math.min(3, remoteData.dailyAdsCount);
+              effectiveGp = Math.min(3, Math.max(0, remoteData.dailyAdsCount - effectiveAg));
+            }
           }
-          setDailyAdsCount(effectiveAds);
+          setDailyAdsgramCount(effectiveAg);
+          setDailyGigapubCount(effectiveGp);
           setLastAdDate(today);
-          setUserStorage('daily_ads_count', String(effectiveAds));
+          setUserStorage('daily_adsgram_count', String(effectiveAg));
+          setUserStorage('daily_gigapub_count', String(effectiveGp));
+          setUserStorage('daily_ads_count', String(effectiveAg + effectiveGp));
           setUserStorage('last_ad_date', today);
 
+          const totalAds = effectiveAg + effectiveGp;
           if (Array.isArray(remoteData.tasks)) {
             const defaultTasks = [
-              { id: 'video', title: 'Watch Ads', reward: '+20 ৳', amount: 20, type: 'taka', action: 'Watch', done: effectiveAds >= 5 },
+              { id: 'video', title: 'Watch Ads', reward: '+20 ৳', amount: 20, type: 'taka', action: 'Watch', done: totalAds >= 6 },
               { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
               { id: 'tg_channel', title: 'Join Telegram Channel', reward: '+50 ৳', amount: 50, type: 'taka', action: 'Join', done: false },
               { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
@@ -543,14 +580,14 @@ export const AppProvider = ({ children }) => {
             ];
             const normalized = defaultTasks.map(defT => {
               if (defT.id === 'video') {
-                return { ...defT, done: effectiveAds >= 5 };
+                return { ...defT, done: totalAds >= 6 };
               }
               const found = remoteData.tasks.find(t => t.id === defT.id);
               return found ? { ...defT, done: Boolean(found.done) } : defT;
             });
             setTasks(normalized);
           } else {
-            setTasks(prev => prev.map(t => t.id === 'video' ? { ...t, title: 'Watch Ads', reward: '+20 ৳', amount: 20, done: effectiveAds >= 5 } : t));
+            setTasks(prev => prev.map(t => t.id === 'video' ? { ...t, title: 'Watch Ads', reward: '+20 ৳', amount: 20, done: totalAds >= 6 } : t));
           }
           const cleanNotifs = userNotif.filter(n => !isLegacyDummyNotification(n));
           setNotifications(cleanNotifs);
@@ -653,6 +690,8 @@ export const AppProvider = ({ children }) => {
           dailyClaimed: remoteData?.dailyClaimed ?? false,
           loginStreak: remoteData?.loginStreak ?? 0,
           lastLoginDate: remoteData?.lastLoginDate ?? null,
+          dailyAdsgramCount: remoteData?.dailyAdsgramCount ?? (remoteData ? dailyAdsgramCount : 0),
+          dailyGigapubCount: remoteData?.dailyGigapubCount ?? (remoteData ? dailyGigapubCount : 0),
           dailyAdsCount: remoteData?.dailyAdsCount ?? (remoteData ? dailyAdsCount : 0),
           lastAdDate: remoteData?.lastAdDate ?? (remoteData ? lastAdDate : getLocalDateString())
         };
@@ -710,6 +749,8 @@ export const AppProvider = ({ children }) => {
       dailyClaimed,
       loginStreak,
       lastLoginDate,
+      dailyAdsgramCount,
+      dailyGigapubCount,
       dailyAdsCount,
       lastAdDate
     };
@@ -736,7 +777,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, loginStreak, lastLoginDate, dailyAdsCount, lastAdDate, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
+  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, loginStreak, lastLoginDate, dailyAdsgramCount, dailyGigapubCount, dailyAdsCount, lastAdDate, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
 
   // Sync dailyClaimed whenever streakStatus changes
   useEffect(() => {
@@ -1027,6 +1068,8 @@ export const AppProvider = ({ children }) => {
         referralQuota,
         refreshReferralQuota,
         dailyAdsCount,
+        dailyAdsgramCount,
+        dailyGigapubCount,
         lastAdDate,
         recordAdWatch
       }}
