@@ -239,6 +239,7 @@ async function processReferralReward(newUser, referrerParam) {
     return { success: false, reason: "self_referral" };
   }
 
+  let lockRef = null;
   try {
     const newUserDocRef = db.collection("users").doc(`tg_${newTgId}`);
 
@@ -262,18 +263,6 @@ async function processReferralReward(newUser, referrerParam) {
       }
     }
 
-    // 3. Atomic Lock: Prevent concurrent requests (e.g. claim_referral + check_channel_member hitting within milliseconds)
-    const lockRef = db.collection("referral_locks").doc(newTgId);
-    try {
-      await lockRef.create({
-        lockedAt: FieldValue.serverTimestamp(),
-        referrerId: cleanRefId
-      });
-    } catch (lockErr) {
-      logger.info(`Concurrent or duplicate referral locked for user ${newTgId}. Blocked.`);
-      await newUserDocRef.set({ referralCompleted: true }, { merge: true });
-      return { success: false, reason: "already_referred" };
-    }
 
     // 3. Verify Telegram Channel Membership (@BengaliPay)
     // The referred user MUST be joined in the Telegram channel to count as an Active Refer
@@ -347,6 +336,19 @@ async function processReferralReward(newUser, referrerParam) {
       );
       logger.info(`User ${newTgId} referred by ${referrerTgId} but NOT in @BengaliPay channel. Stored as pending.`);
       return { success: false, reason: "channel_not_joined", pending: true };
+    }
+
+    // 5. Atomic Lock: Acquire lock ONLY when user is verified in channel before disbursing reward!
+    lockRef = db.collection("referral_locks").doc(newTgId);
+    try {
+      await lockRef.create({
+        lockedAt: FieldValue.serverTimestamp(),
+        referrerId: cleanRefId
+      });
+    } catch (lockErr) {
+      logger.info(`Concurrent or duplicate referral locked for user ${newTgId}. Blocked.`);
+      await newUserDocRef.set({ referralCompleted: true }, { merge: true });
+      return { success: false, reason: "already_referred" };
     }
 
     const REFER_REWARD = 50; // 50৳ per refer
@@ -452,6 +454,9 @@ async function processReferralReward(newUser, referrerParam) {
     logger.info(`Referral successfully processed: new user ${newTgId} referred by ${referrerTgId}, +50৳ credited.`);
     return { success: true, referrerTgId, reward: REFER_REWARD };
   } catch (err) {
+    if (lockRef) {
+      try { await lockRef.delete(); } catch (_) {}
+    }
     logger.error("Error processing referral reward:", err);
     return { success: false, error: err.message };
   }

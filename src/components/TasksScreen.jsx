@@ -141,6 +141,7 @@ export const TasksScreen = () => {
   };
 
   const handleTaskAction = (task) => {
+    if (!task || task.done) return;
     if (task.id === 'video') startVideoTask();
     else if (task.id === 'daily') handleDailyCheckin();
     else if (task.id === 'tg_channel') setActiveModal('tg_channel');

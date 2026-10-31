@@ -62,6 +62,7 @@ export const WithdrawScreen = () => {
   }, [userId]);
 
   const handleWithdraw = async () => {
+    if (isSubmitting) return;
     setErrorMsg('');
 
     // Phone validation
@@ -126,32 +127,7 @@ export const WithdrawScreen = () => {
     const trxId = 'TRX' + Math.floor(10000000 + Math.random() * 90000000);
     const dateFormatted = new Date().toLocaleDateString('bn-BD') + ' ' + new Date().toLocaleTimeString();
 
-    // Deduct state & remember phone
-    const newBal = Math.max(0, +(balance - numAmount).toFixed(2));
-    const newTok = Math.max(0, tokens - 50);
-    setBalance(newBal);
-    setTokens(newTok);
-    setUserPhone(cleanPhone);
-
-    setTransactions(prev => [
-      {
-        id: Date.now(),
-        title: `${method === 'bkash' ? 'bKash' : 'Nagad'} Withdraw`,
-        amount: `-${numAmount} ৳`,
-        time: 'Just now',
-        icon: 'check',
-        color: 'pink'
-      },
-      ...prev
-    ]);
-
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-
-    // Real submission to Firebase DB
+    // Real submission to Firebase DB first (safeguards user balance against network drops)
     const res = await submitWithdrawalToFirestore({
       userId,
       trxId,
@@ -165,6 +141,30 @@ export const WithdrawScreen = () => {
     setIsSubmitting(false);
 
     if (res.success) {
+      // Deduct state & remember phone ONLY upon confirmed DB submission
+      const newBal = Math.max(0, +(balance - numAmount).toFixed(2));
+      const newTok = Math.max(0, tokens - 50);
+      setBalance(newBal);
+      setTokens(newTok);
+      setUserPhone(cleanPhone);
+
+      setTransactions(prev => [
+        {
+          id: Date.now(),
+          title: `${method === 'bkash' ? 'bKash' : 'Nagad'} Withdraw`,
+          amount: `-${numAmount} ৳`,
+          time: 'Just now',
+          icon: 'check',
+          color: 'pink'
+        },
+        ...prev
+      ]);
+
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
       if (typeof addNotification === 'function') {
         addNotification({
           category: 'rewards',
