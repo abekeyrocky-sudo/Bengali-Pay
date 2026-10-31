@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import splashMotionImg from '../assets/bengali_pay_splash_motion.webp';
+import splashMotionImg from '../assets/bengali_pay_splash_motion.jpg';
 
 export const SplashScreen = () => {
   const { navigateTo } = useApp();
