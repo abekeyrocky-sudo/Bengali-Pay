@@ -255,6 +255,19 @@ export const AppProvider = ({ children }) => {
   const streakStatus = getStreakStatus(lastLoginDate, loginStreak);
   const [dailyClaimed, setDailyClaimed] = useState(!streakStatus.canClaimToday);
 
+  // Daily Adsgram Interstitial Ads Watch State (Max 5 per day, resets daily)
+  const [dailyAdsCount, setDailyAdsCount] = useState(() => {
+    const today = getLocalDateString();
+    const savedDate = getUserStorage('last_ad_date');
+    if (savedDate !== today) return 0;
+    const savedCount = getUserStorage('daily_ads_count');
+    return savedCount ? parseInt(savedCount, 10) : 0;
+  });
+
+  const [lastAdDate, setLastAdDate] = useState(() => {
+    return getUserStorage('last_ad_date', null);
+  });
+
   // Real Transactions list (starts clean from DB)
   const [transactions, setTransactions] = useState([]);
 
@@ -364,13 +377,35 @@ export const AppProvider = ({ children }) => {
 
   // Tasks state (Rewards are strictly in ৳ Taka, Tokens are exclusive to 14-day login streak)
   const [tasks, setTasks] = useState([
-    { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
+    { id: 'video', title: 'Watch Ads', reward: '+20 ৳', amount: 20, type: 'taka', action: 'Watch', done: dailyAdsCount >= 5 },
     { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
     { id: 'tg_channel', title: 'Join Telegram Channel', reward: '+50 ৳', amount: 50, type: 'taka', action: 'Join', done: false },
     { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
     { id: 'refer', title: 'Refer a Friend', reward: '+10 ৳', amount: 10, type: 'taka', action: 'Invite', done: false },
     { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
   ]);
+
+  // Record an ad watch and update daily progress (max 5 ads per day)
+  const recordAdWatch = () => {
+    const today = getLocalDateString();
+    const currentCount = (lastAdDate === today) ? (dailyAdsCount || 0) : 0;
+    const nextCount = Math.min(5, currentCount + 1);
+    setDailyAdsCount(nextCount);
+    setLastAdDate(today);
+    setUserStorage('daily_ads_count', String(nextCount));
+    setUserStorage('last_ad_date', today);
+
+    if (nextCount >= 5) {
+      setTasks(prev => prev.map(t => t.id === 'video' ? { ...t, done: true } : t));
+    }
+
+    saveUserToFirestore(userId, {
+      dailyAdsCount: nextCount,
+      lastAdDate: today
+    });
+
+    return nextCount;
+  };
 
   // Process incoming referral if opened with ?startapp=<refParam> or Telegram deep link
   useEffect(() => {
@@ -486,9 +521,20 @@ export const AppProvider = ({ children }) => {
           setTransactions(userTx);
           setUserStorage('transactions', JSON.stringify(userTx));
 
+          // Restore Adsgram Daily Ads Watch state (resets daily)
+          const today = getLocalDateString();
+          let effectiveAds = 0;
+          if (remoteData.lastAdDate === today && typeof remoteData.dailyAdsCount === 'number') {
+            effectiveAds = remoteData.dailyAdsCount;
+          }
+          setDailyAdsCount(effectiveAds);
+          setLastAdDate(today);
+          setUserStorage('daily_ads_count', String(effectiveAds));
+          setUserStorage('last_ad_date', today);
+
           if (Array.isArray(remoteData.tasks)) {
             const defaultTasks = [
-              { id: 'video', title: 'Watch 15s Video', reward: '+1 ৳', amount: 1, type: 'taka', action: 'Watch', done: false },
+              { id: 'video', title: 'Watch Ads', reward: '+20 ৳', amount: 20, type: 'taka', action: 'Watch', done: effectiveAds >= 5 },
               { id: 'daily', title: 'Daily Check-in', reward: '+5 ৳', amount: 5, type: 'taka', action: 'Claim', done: false },
               { id: 'tg_channel', title: 'Join Telegram Channel', reward: '+50 ৳', amount: 50, type: 'taka', action: 'Join', done: false },
               { id: 'game', title: 'Play Mini Game', reward: '+2 ৳', amount: 2, type: 'taka', action: 'Play', done: false },
@@ -496,10 +542,15 @@ export const AppProvider = ({ children }) => {
               { id: 'survey', title: 'Complete Survey', reward: '+3 ৳', amount: 3, type: 'taka', action: 'Start', done: false }
             ];
             const normalized = defaultTasks.map(defT => {
+              if (defT.id === 'video') {
+                return { ...defT, done: effectiveAds >= 5 };
+              }
               const found = remoteData.tasks.find(t => t.id === defT.id);
               return found ? { ...defT, done: Boolean(found.done) } : defT;
             });
             setTasks(normalized);
+          } else {
+            setTasks(prev => prev.map(t => t.id === 'video' ? { ...t, title: 'Watch Ads', reward: '+20 ৳', amount: 20, done: effectiveAds >= 5 } : t));
           }
           const cleanNotifs = userNotif.filter(n => !isLegacyDummyNotification(n));
           setNotifications(cleanNotifs);
@@ -601,7 +652,9 @@ export const AppProvider = ({ children }) => {
           phone: remoteData?.phone ?? (remoteData ? userPhone : ''),
           dailyClaimed: remoteData?.dailyClaimed ?? false,
           loginStreak: remoteData?.loginStreak ?? 0,
-          lastLoginDate: remoteData?.lastLoginDate ?? null
+          lastLoginDate: remoteData?.lastLoginDate ?? null,
+          dailyAdsCount: remoteData?.dailyAdsCount ?? (remoteData ? dailyAdsCount : 0),
+          lastAdDate: remoteData?.lastAdDate ?? (remoteData ? lastAdDate : getLocalDateString())
         };
         lastSavedJson.current = JSON.stringify(initialPayload);
         isLoaded.current = true;
@@ -656,7 +709,9 @@ export const AppProvider = ({ children }) => {
       phone: userPhone,
       dailyClaimed,
       loginStreak,
-      lastLoginDate
+      lastLoginDate,
+      dailyAdsCount,
+      lastAdDate
     };
 
     const currentJson = JSON.stringify(currentPayload);
@@ -681,7 +736,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, loginStreak, lastLoginDate, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
+  }, [balance, tokens, spinsLeft, userLevel, userXp, userPhone, dailyClaimed, loginStreak, lastLoginDate, dailyAdsCount, lastAdDate, transactions, tasks, notifications, userId, userTelegramId, userName, userFirstName, userUsername, userPhoto, tgSession]);
 
   // Sync dailyClaimed whenever streakStatus changes
   useEffect(() => {
@@ -970,7 +1025,10 @@ export const AppProvider = ({ children }) => {
         clearAllNotifications,
         addNotification,
         referralQuota,
-        refreshReferralQuota
+        refreshReferralQuota,
+        dailyAdsCount,
+        lastAdDate,
+        recordAdWatch
       }}
     >
       {children}

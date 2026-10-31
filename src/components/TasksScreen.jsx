@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { sounds } from '../utils/audio';
 import { checkChannelMembershipAPI } from '../firebase';
 import { getTelegramWebApp, getActiveTelegramUserId } from '../utils/telegram';
+import { showAdsgramInterstitialAd } from '../utils/adsgram';
 import { 
   Play, 
   Calendar, 
@@ -35,7 +36,10 @@ export const TasksScreen = () => {
     setDailyClaimed,
     setShowDailyLoginModal,
     notifySuccess,
-    notifyWarn
+    notifyWarn,
+    dailyAdsCount,
+    lastAdDate,
+    recordAdWatch
   } = useApp();
 
   // Active modal state: null | 'video' | 'survey' | 'refer' | 'tg_channel'
@@ -44,6 +48,7 @@ export const TasksScreen = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isVerifyingChannel, setIsVerifyingChannel] = useState(false);
+  const [isAdLoading, setIsAdLoading] = useState(false);
 
   // Survey state
   const [surveyStep, setSurveyStep] = useState(1);
@@ -82,25 +87,45 @@ export const TasksScreen = () => {
     }
   };
 
-  // Handle Video Watch
-  const startVideoTask = () => {
-    setActiveModal('video');
-    setVideoTimer(15);
-    setIsVideoPlaying(true);
+  // Handle Adsgram Interstitial Ad Watch (Block ID: int-57158, +20 ৳, Max 5 per day)
+  const startVideoTask = async () => {
+    if (dailyAdsCount >= 5) {
+      notifyWarn(
+        'দৈনিক লিমিট শেষ!',
+        'আজকের জন্য ৫টি বিজ্ঞাপন দেখার লিমিট পূর্ণ হয়েছে (৫/৫)। আগামীকাল আবার বিজ্ঞাপন দেখতে পারবেন!'
+      );
+      return;
+    }
 
-    let current = 15;
-    const interval = setInterval(() => {
-      current -= 1;
-      setVideoTimer(current);
-      if (current <= 0) {
-        clearInterval(interval);
-        setIsVideoPlaying(false);
-        setActiveModal(null);
-        earnReward(1, 0, 'Watch Video Reward');
-        markTaskDone('video');
-        notifySuccess('ভিডিও টাস্ক সম্পন্ন!', '+১ ৳ সফলভাবে আপনার অ্যাকাউন্টে যোগ হয়েছে!');
+    if (isAdLoading) return;
+    setIsAdLoading(true);
+
+    try {
+      // Trigger official Adsgram Interstitial ad (Block ID: int-57158)
+      const res = await showAdsgramInterstitialAd('int-57158');
+
+      if (res && res.done) {
+        const nextCount = recordAdWatch();
+        earnReward(20, 0, 'বিজ্ঞাপন দেখার পুরস্কার');
+        
+        notifySuccess(
+          'বিজ্ঞাপন সম্পন্ন! 🎉',
+          `+২০ ৳ সফলভাবে আপনার অ্যাকাউন্টে যোগ হয়েছে! (আজকের অগ্রগতি: ${nextCount}/৫)`
+        );
+      } else {
+        notifyWarn(
+          'বিজ্ঞাপন সম্পন্ন হয়নি!',
+          'বিজ্ঞাপন লোড হতে সমস্যা হয়েছে অথবা বন্ধ করা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
+        );
       }
-    }, 1000);
+    } catch (err) {
+      notifyWarn(
+        'বিজ্ঞাপন সমস্যা',
+        'ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।'
+      );
+    } finally {
+      setIsAdLoading(false);
+    }
   };
 
   // Mark task as done
@@ -235,7 +260,7 @@ export const TasksScreen = () => {
         gap: '12px'
       }}>
         {tasks.map((task) => {
-          const isDone = task.done || (task.id === 'daily' && dailyClaimed);
+          const isDone = task.done || (task.id === 'daily' && dailyClaimed) || (task.id === 'video' && dailyAdsCount >= 5);
 
           return (
             <div
@@ -274,9 +299,25 @@ export const TasksScreen = () => {
                     fontSize: '14px',
                     fontWeight: '700',
                     color: isDone ? '#64748b' : '#1e293b',
-                    textDecoration: isDone ? 'line-through' : 'none'
+                    textDecoration: isDone ? 'line-through' : 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
                   }}>
-                    {task.title}
+                    <span>{task.id === 'video' ? 'Watch Ads' : task.title}</span>
+                    {task.id === 'video' && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        color: isDone ? '#16a34a' : '#0284c7',
+                        background: isDone ? '#f0fdf4' : '#e0f2fe',
+                        padding: '1px 7px',
+                        borderRadius: '8px',
+                        textDecoration: 'none'
+                      }}>
+                        {dailyAdsCount}/৫
+                      </span>
+                    )}
                   </h4>
                   <p style={{
                     fontSize: '12px',
@@ -284,7 +325,7 @@ export const TasksScreen = () => {
                     color: '#16a34a',
                     marginTop: '2px'
                   }}>
-                    {task.reward}
+                    {task.id === 'video' ? '+২০ ৳' : task.reward}
                   </p>
                 </div>
               </div>
@@ -308,22 +349,26 @@ export const TasksScreen = () => {
               ) : (
                 <button
                   onClick={() => handleTaskAction(task)}
+                  disabled={task.id === 'video' && isAdLoading}
                   style={{
-                    background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                    background: (task.id === 'video' && isAdLoading)
+                      ? '#94a3b8'
+                      : 'linear-gradient(135deg, #16a34a, #15803d)',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '14px',
                     padding: '8px 18px',
                     fontSize: '13px',
                     fontWeight: '700',
-                    cursor: 'pointer',
+                    cursor: (task.id === 'video' && isAdLoading) ? 'wait' : 'pointer',
                     boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
-                    transition: 'transform 0.1s ease'
+                    transition: 'transform 0.1s ease',
+                    opacity: (task.id === 'video' && isAdLoading) ? 0.75 : 1
                   }}
-                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                  onMouseDown={(e) => !(task.id === 'video' && isAdLoading) && (e.currentTarget.style.transform = 'scale(0.95)')}
                   onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                  {task.action}
+                  {task.id === 'video' && isAdLoading ? 'বিজ্ঞাপন লোড হচ্ছে...' : task.action}
                 </button>
               )}
             </div>
