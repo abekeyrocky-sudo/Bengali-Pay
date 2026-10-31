@@ -765,3 +765,73 @@ export const syncReferralQuota = onRequest(
     }
   }
 );
+
+/**
+ * Adsgram S2S (Server-to-Server) Webhook Endpoint
+ * Adsgram calls this URL via HTTPS GET when a user finishes a Task:
+ * https://us-central1-bengali-pay.cloudfunctions.net/adsgramReward?userId=[userId]
+ * Automatically grants +1 Free Spin to the user's account in Firestore!
+ */
+export const adsgramReward = onRequest(
+  { cors: true, maxInstances: 15, timeoutSeconds: 30 },
+  async (req, res) => {
+    try {
+      const rawId = req.query.userId || req.query.userid || req.query.user_id || req.body?.userId || '';
+      const cleanId = String(rawId).replace(/^tg_/, '').trim();
+
+      if (!cleanId) {
+        logger.warn('Adsgram webhook called without userId:', req.query);
+        res.status(400).send('Missing userId');
+        return;
+      }
+
+      logger.info(`Adsgram task reward received for user ${cleanId}. Crediting +1 Spin...`);
+
+      // 1. Find user in Firestore
+      const userRef = db.collection('users').doc(`tg_${cleanId}`);
+      const userSnap = await userRef.get();
+
+      if (!userSnap.exists) {
+        const altRef = db.collection('users').doc(cleanId);
+        const altSnap = await altRef.get();
+        if (altSnap.exists) {
+          await altRef.update({
+            spinsLeft: FieldValue.increment(1),
+            updatedAt: FieldValue.serverTimestamp()
+          });
+        } else {
+          await userRef.set({
+            telegramId: cleanId,
+            spinsLeft: 4,
+            balance: 100,
+            welcomeBonusClaimed: true,
+            updatedAt: FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      } else {
+        await userRef.update({
+          spinsLeft: FieldValue.increment(1),
+          updatedAt: FieldValue.serverTimestamp()
+        });
+      }
+
+      logger.info(`Successfully credited +1 Spin to user ${cleanId} from Adsgram Task.`);
+
+      // Send Telegram notification to user
+      try {
+        await telegramApi('sendMessage', {
+          chat_id: cleanId,
+          text: '🎉 <b>টাস্ক সম্পন্ন হয়েছে!</b>\n\nআপনি Adsgram টাস্ক সম্পন্ন করায় আপনার একাউন্টে <b>+১টি ফ্রি স্পিন 🎰</b> যোগ করা হয়েছে! এখনই অ্যাপ ওপেন করে স্পিন করুন।',
+          parse_mode: 'HTML'
+        });
+      } catch (e) {
+        logger.warn(`Could not send Telegram message to ${cleanId}:`, e.message);
+      }
+
+      res.status(200).send('OK');
+    } catch (err) {
+      logger.error('Adsgram webhook error:', err);
+      res.status(500).send('Server error');
+    }
+  }
+);
