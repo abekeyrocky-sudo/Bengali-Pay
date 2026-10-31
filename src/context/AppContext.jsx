@@ -988,6 +988,15 @@ export const AppProvider = ({ children }) => {
   };
 
   const navigateTo = (screen) => {
+    // If transitioning out of splash screen, always allow landing on home
+    if (currentScreen === 'splash' && screen === 'home') {
+      setCurrentScreen('home');
+      if (isQuotaLocked()) {
+        setTimeout(() => setIsQuotaReminderOpen(true), 1200);
+      }
+      return;
+    }
+
     // If quota mission is strictly locked (skips exhausted or penalty active, quota incomplete)
     if (isQuotaLocked()) {
       // User is ONLY allowed to access 'account-status' and 'invite' (plus initial 'splash')

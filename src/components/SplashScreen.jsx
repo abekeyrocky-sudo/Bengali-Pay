@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import splashMotionImg from '../assets/bengali_pay_splash_motion.jpg';
 
@@ -9,10 +9,12 @@ const toBengaliNumber = (num) => {
 };
 
 export const SplashScreen = () => {
-  const { navigateTo } = useApp();
+  const { setCurrentScreen } = useApp();
   const [progress, setProgress] = useState(1);
+  const finishedRef = useRef(false);
 
   // Smooth 5-second progress bar animation (1% to 100%)
+  // Runs exactly once on mount, immune to AppContext re-renders
   useEffect(() => {
     const duration = 5000; // 5 seconds
     const startTime = performance.now();
@@ -22,16 +24,17 @@ export const SplashScreen = () => {
       const current = Math.min(100, Math.max(1, Math.round((elapsed / duration) * 100)));
       setProgress(current);
 
-      if (elapsed >= duration) {
+      if (elapsed >= duration && !finishedRef.current) {
+        finishedRef.current = true;
         clearInterval(interval);
         setTimeout(() => {
-          navigateTo('home');
-        }, 150);
+          setCurrentScreen('home');
+        }, 80);
       }
     }, 35);
 
     return () => clearInterval(interval);
-  }, [navigateTo]);
+  }, [setCurrentScreen]);
 
   return (
     <div 
