@@ -64,7 +64,7 @@ export const SplashScreen = () => {
       <div
         style={{
           position: 'absolute',
-          bottom: '38px',
+          bottom: '54px',
           left: '50%',
           transform: 'translateX(-50%)',
           width: '84%',
@@ -79,13 +79,15 @@ export const SplashScreen = () => {
         <div
           style={{
             color: '#ffffff',
-            fontSize: '21px',
-            fontWeight: '900',
-            fontFamily: "'Noto Serif Bengali', 'Baloo Da 2', serif",
-            letterSpacing: '0.5px',
+            fontSize: '22px',
+            fontWeight: '800',
+            fontFamily: "'Baloo Da 2', sans-serif",
+            letterSpacing: '0.4px',
             marginBottom: '6px',
-            WebkitTextStroke: '1.4px #0a3314',
-            textShadow: '-2px -2px 0 #0a3314, 2px -2px 0 #0a3314, -2px 2px 0 #0a3314, 2px 2px 0 #0a3314, 0 4px 10px rgba(0,0,0,0.85)'
+            paintOrder: 'stroke fill',
+            WebkitTextStroke: '3.5px #144d08',
+            textShadow: '0 3px 5px rgba(0,0,0,0.45)',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}
         >
           লোড হচ্ছে... {toBengaliNumber(progress)}%
@@ -96,13 +98,13 @@ export const SplashScreen = () => {
           style={{
             position: 'relative',
             width: '100%',
-            height: '28px',
-            background: 'linear-gradient(180deg, #388e3c 0%, #2e7d32 45%, #1b5e20 100%)',
-            border: '3px solid #0d3817',
-            borderRadius: '26px',
-            padding: '3px 4px',
+            height: '30px',
+            background: 'linear-gradient(180deg, #82a330 0%, #57852a 35%, #356114 75%, #205008 100%)',
+            border: '2.5px solid #143d08',
+            borderRadius: '24px',
+            padding: '3.5px 4px',
             boxSizing: 'border-box',
-            boxShadow: '0 6px 18px rgba(0,0,0,0.7), inset 0 2px 3px rgba(255,255,255,0.35)'
+            boxShadow: '0 5px 14px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.45)'
           }}
         >
           {/* Decorative leaves on top-left of the green frame */}
@@ -122,14 +124,14 @@ export const SplashScreen = () => {
           >
             <path
               d="M11 13C9 7 4 3 0 5C0 10 5 13 11 13Z"
-              fill="#86efac"
-              stroke="#0d3817"
+              fill="#76b82a"
+              stroke="#143d08"
               strokeWidth="1.3"
             />
             <path
               d="M11 13C13 7 18 3 22 5C22 10 17 13 11 13Z"
-              fill="#22c55e"
-              stroke="#0d3817"
+              fill="#4c8c18"
+              stroke="#143d08"
               strokeWidth="1.3"
             />
           </svg>
@@ -140,9 +142,9 @@ export const SplashScreen = () => {
               position: 'relative',
               width: '100%',
               height: '100%',
-              background: '#082310',
-              borderRadius: '20px',
-              boxShadow: 'inset 0 3px 6px rgba(0,0,0,0.9), inset 0 -1px 2px rgba(255,255,255,0.12)',
+              background: '#17431e',
+              borderRadius: '18px',
+              boxShadow: 'inset 0 3px 5px rgba(0,0,0,0.7), inset 0 -1px 2px rgba(255,255,255,0.15)',
               overflow: 'visible'
             }}
           >
@@ -151,10 +153,10 @@ export const SplashScreen = () => {
               style={{
                 width: `${progress}%`,
                 height: '100%',
-                borderRadius: '18px',
-                background: 'linear-gradient(180deg, #fffbeb 0%, #fde047 25%, #f59e0b 60%, #b45309 100%)',
-                boxShadow: 'inset 0 2px 2px rgba(255,255,255,0.9), inset 0 -2px 3px rgba(180,83,9,0.7), 0 0 10px rgba(245,158,11,0.6)',
-                border: '1px solid #78350f',
+                borderRadius: '14px',
+                background: 'linear-gradient(180deg, #fffbeb 0%, #fef08a 18%, #facc15 45%, #f59e0b 75%, #d97706 100%)',
+                boxShadow: 'inset 0 2px 2px rgba(255,255,255,0.95), inset 0 -2px 3px rgba(180,83,9,0.7), 0 0 8px rgba(245,158,11,0.5)',
+                border: '1px solid #b45309',
                 boxSizing: 'border-box',
                 transition: 'width 0.04s linear'
               }}
@@ -172,7 +174,7 @@ export const SplashScreen = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.6))',
+                filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.5))',
                 transition: 'left 0.04s linear'
               }}
             >
@@ -190,14 +192,14 @@ export const SplashScreen = () => {
               >
                 <path
                   d="M11 11C9 6 4 2 0 4C0 9 5 11 11 11Z"
-                  fill="#86efac"
-                  stroke="#0f3d1b"
+                  fill="#76b82a"
+                  stroke="#143d08"
                   strokeWidth="1.2"
                 />
                 <path
                   d="M11 11C13 6 18 2 22 4C22 9 17 11 11 11Z"
-                  fill="#22c55e"
-                  stroke="#0f3d1b"
+                  fill="#4c8c18"
+                  stroke="#143d08"
                   strokeWidth="1.2"
                 />
               </svg>
@@ -209,8 +211,8 @@ export const SplashScreen = () => {
                   height: '27px',
                   borderRadius: '50%',
                   background: 'radial-gradient(circle at 35% 30%, #fffbeb 0%, #fde047 30%, #eab308 65%, #b45309 100%)',
-                  border: '2px solid #78350f',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.85), inset 0 -2px 3px rgba(120,53,15,0.6)',
+                  border: '2px solid #8f7013',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.45), inset 0 2px 2px rgba(255,255,255,0.9), inset 0 -2px 3px rgba(120,53,15,0.6)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -219,10 +221,10 @@ export const SplashScreen = () => {
               >
                 <span
                   style={{
-                    fontFamily: "'Noto Serif Bengali', serif",
+                    fontFamily: "'Baloo Da 2', 'Noto Serif Bengali', serif",
                     fontSize: '15px',
                     fontWeight: '900',
-                    color: '#0f3d1b',
+                    color: '#144d08',
                     marginTop: '-2px',
                     textShadow: '0 1px 1px rgba(255,255,255,0.7)'
                   }}
@@ -238,13 +240,15 @@ export const SplashScreen = () => {
         <div
           style={{
             color: '#ffffff',
-            fontSize: '18px',
-            fontWeight: '900',
-            fontFamily: "'Noto Serif Bengali', 'Baloo Da 2', serif",
-            letterSpacing: '0.5px',
+            fontSize: '19px',
+            fontWeight: '800',
+            fontFamily: "'Baloo Da 2', sans-serif",
+            letterSpacing: '0.4px',
             marginTop: '8px',
-            WebkitTextStroke: '1.4px #0a3314',
-            textShadow: '-2px -2px 0 #0a3314, 2px -2px 0 #0a3314, -2px 2px 0 #0a3314, 2px 2px 0 #0a3314, 0 4px 10px rgba(0,0,0,0.85)'
+            paintOrder: 'stroke fill',
+            WebkitTextStroke: '3.5px #144d08',
+            textShadow: '0 3px 5px rgba(0,0,0,0.45)',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
           }}
         >
           অপেক্ষা করুন...
