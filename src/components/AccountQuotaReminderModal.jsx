@@ -39,7 +39,8 @@ export const AccountQuotaReminderModal = () => {
     navigateTo, 
     userId,
     isQuotaReminderOpen,
-    setIsQuotaReminderOpen
+    setIsQuotaReminderOpen,
+    currentScreen
   } = useApp();
   const [skipCount, setSkipCount] = useState(() => getStoredSkipCount(userId));
   const hasTriggeredRef = useRef(false);
@@ -106,8 +107,11 @@ export const AccountQuotaReminderModal = () => {
   }, [isQuotaReminderOpen, referralQuota?.nextResetMs]);
 
   useEffect(() => {
-    // If penalized, trigger quickly after mount (1.2s); normal days wait 15s
-    const delay = isPenalized ? 1200 : 15000;
+    // Never trigger timer or popup while on splash screen!
+    if (currentScreen === 'splash') return;
+
+    // If penalized, trigger after landing on home (2s); normal days wait 15s
+    const delay = isPenalized ? 2000 : 15000;
     const timer = setTimeout(() => {
       // Trigger once per app session if quota is not yet met
       if (!hasTriggeredRef.current) {
@@ -126,9 +130,9 @@ export const AccountQuotaReminderModal = () => {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [referralQuota, isPenalized, setIsQuotaReminderOpen]);
+  }, [currentScreen, referralQuota, isPenalized, setIsQuotaReminderOpen]);
 
-  if (!isQuotaReminderOpen) return null;
+  if (!isQuotaReminderOpen || currentScreen === 'splash') return null;
 
   const handleGoToStatus = () => {
     sounds.playClick();

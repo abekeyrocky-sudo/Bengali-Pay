@@ -155,6 +155,7 @@ export const AppProvider = ({ children }) => {
   const isLoaded = useRef(false);
   const lastSavedJson = useRef('');
   const saveTimerRef = useRef(null);
+  const pendingWelcomeCelebration = useRef(false);
 
   // String Telegram ID tracking (pure numeric string or empty if web)
   const [userTelegramId, setUserTelegramId] = useState(() => {
@@ -439,23 +440,9 @@ export const AppProvider = ({ children }) => {
               notifications: userNotif
             });
 
-            // Trigger Welcome Celebration
+            // Schedule celebration for AFTER the 5s splash screen loading completes
             if (!getUserStorage('welcome_bonus_shown')) {
-              setUserStorage('welcome_bonus_shown', 'true');
-              setTimeout(() => {
-                try {
-                  confetti({
-                    particleCount: 90,
-                    spread: 70,
-                    origin: { y: 0.55 }
-                  });
-                  sounds.playWin();
-                } catch (e) {}
-                notifySuccess(
-                  'স্বাগতম বোনাস! 🎉',
-                  'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যুক্ত করা হয়েছে।'
-                );
-              }, 1200);
+              pendingWelcomeCelebration.current = true;
             }
           }
 
@@ -596,23 +583,9 @@ export const AppProvider = ({ children }) => {
             notifications: initialNotifications
           });
 
-          // Trigger Welcome Celebration
+          // Schedule celebration for AFTER the 5s splash screen loading completes
           if (!getUserStorage('welcome_bonus_shown')) {
-            setUserStorage('welcome_bonus_shown', 'true');
-            setTimeout(() => {
-              try {
-                confetti({
-                  particleCount: 90,
-                  spread: 70,
-                  origin: { y: 0.55 }
-                });
-                sounds.playWin();
-              } catch (e) {}
-              notifySuccess(
-                'স্বাগতম বোনাস! 🎉',
-                'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যুক্ত করা হয়েছে।'
-              );
-            }, 1200);
+            pendingWelcomeCelebration.current = true;
           }
         }
 
@@ -715,17 +688,46 @@ export const AppProvider = ({ children }) => {
     setDailyClaimed(!streakStatus.canClaimToday);
   }, [streakStatus.canClaimToday]);
 
-  // Auto-trigger daily login popup on app launch if not claimed today
+  // Trigger one-time 100 ৳ Welcome Celebration ONLY after 5s splash screen is completely done
   useEffect(() => {
-    const today = getLocalDateString();
-    const diff = getDayDifference(lastLoginDate, today);
-    if (diff !== 0) {
+    if (currentScreen === 'splash') return;
+
+    if (pendingWelcomeCelebration.current) {
+      pendingWelcomeCelebration.current = false;
+      setUserStorage('welcome_bonus_shown', 'true');
       const timer = setTimeout(() => {
-        setShowDailyLoginModal(true);
+        try {
+          confetti({
+            particleCount: 90,
+            spread: 70,
+            origin: { y: 0.55 }
+          });
+          sounds.playWin();
+        } catch (e) {}
+        notifySuccess(
+          'স্বাগতম বোনাস! 🎉',
+          'Bengali Pay পরিবারে স্বাগতম! আপনার অ্যাকাউন্টে ১০০ ৳ ওয়েলকাম বোনাস যুক্ত করা হয়েছে।'
+        );
       }, 700);
       return () => clearTimeout(timer);
     }
-  }, [lastLoginDate]);
+  }, [currentScreen]);
+
+  // Auto-trigger daily login popup on app launch if not claimed today (ONLY after landing on Home, never during 5s splash!)
+  useEffect(() => {
+    if (currentScreen === 'splash') return;
+
+    const today = getLocalDateString();
+    const diff = getDayDifference(lastLoginDate, today);
+    if (diff !== 0) {
+      // If welcome celebration is scheduled, wait for it before showing daily login
+      const delay = pendingWelcomeCelebration.current ? 4500 : 1200;
+      const timer = setTimeout(() => {
+        setShowDailyLoginModal(true);
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [lastLoginDate, currentScreen]);
 
   // Claim Daily Login Reward handler
   const claimDailyLoginReward = () => {

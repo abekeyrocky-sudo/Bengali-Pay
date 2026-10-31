@@ -11,10 +11,11 @@ export const DailyLoginModal = () => {
     loginStreak = 0,
     dailyLoginRewards = [],
     streakStatus = {},
-    claimDailyLoginReward
+    claimDailyLoginReward,
+    currentScreen
   } = useApp();
 
-  if (!showDailyLoginModal) return null;
+  if (!showDailyLoginModal || currentScreen === 'splash') return null;
 
   const { canClaimToday = false, currentDayToClaim = 1, activeStreak = 0 } = streakStatus;
 

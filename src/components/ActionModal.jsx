@@ -4,10 +4,10 @@ import { CheckCircle2, AlertTriangle, XCircle, X } from 'lucide-react';
 import { sounds } from '../utils/audio';
 
 export const ActionModal = () => {
-  const { modalConfig, closeModal } = useApp();
+  const { modalConfig, closeModal, currentScreen } = useApp();
 
   useEffect(() => {
-    if (modalConfig) {
+    if (modalConfig && currentScreen !== 'splash') {
       if (modalConfig.type === 'success') {
         sounds.playWin();
       } else {
@@ -24,7 +24,7 @@ export const ActionModal = () => {
     }
   }, [modalConfig]);
 
-  if (!modalConfig) return null;
+  if (!modalConfig || currentScreen === 'splash') return null;
 
   const {
     type = 'info',

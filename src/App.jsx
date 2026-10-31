@@ -110,17 +110,22 @@ const MainAppContent = () => {
         {/* Bottom Navigation Bar */}
         {showBottomNav && <BottomNav />}
 
-        {/* Global Action Modal (Success, Warn, Fail) */}
-        <ActionModal />
+        {/* All Popups & Modals are strictly blocked during the 5s Splash Screen Loading */}
+        {currentScreen !== 'splash' && (
+          <>
+            {/* Global Action Modal (Success, Warn, Fail) */}
+            <ActionModal />
 
-        {/* Mandatory Telegram Channel Gate Modal */}
-        <ChannelGateModal />
+            {/* Mandatory Telegram Channel Gate Modal */}
+            <ChannelGateModal />
 
-        {/* 14-Day Daily Login Streak Popup Modal */}
-        <DailyLoginModal />
+            {/* 14-Day Daily Login Streak Popup Modal */}
+            <DailyLoginModal />
 
-        {/* 15s Automatic Daily Quota Reminder Modal */}
-        <AccountQuotaReminderModal />
+            {/* Automatic Daily Quota Reminder Modal */}
+            <AccountQuotaReminderModal />
+          </>
+        )}
       </div>
     </div>
   );
