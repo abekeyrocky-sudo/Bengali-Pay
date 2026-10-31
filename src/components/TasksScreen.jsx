@@ -253,6 +253,43 @@ export const TasksScreen = () => {
         </div>
       </div>
 
+      {/* Adsgram Sponsored Partner Task Block (task-57162) - Rewards: +1 Free Spin */}
+      <div style={{
+        background: '#ffffff',
+        borderRadius: '18px',
+        padding: '14px 16px',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
+        border: '1.5px solid #bae6fd'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '15px' }}>⚡</span>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#0369a1' }}>
+              পার্টনার স্পেশাল টাস্ক
+            </span>
+          </div>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: '800',
+            color: '#b45309',
+            background: '#fef3c7',
+            padding: '2px 8px',
+            borderRadius: '8px',
+            border: '1px solid #fde047'
+          }}>
+            +১টি ফ্রি স্পিন 🎰
+          </span>
+        </div>
+
+        {/* Official Adsgram Task Component */}
+        <adsgram-task data-block-id="task-57162"></adsgram-task>
+      </div>
+
       {/* Tasks List */}
       <div style={{
         display: 'flex',

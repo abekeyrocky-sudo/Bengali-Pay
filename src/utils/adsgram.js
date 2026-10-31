@@ -3,8 +3,9 @@
  * Official Documentation: https://adsgram.ai
  */
 
-// User's Interstitial Block ID
+// User's Configured Block IDs from Adsgram Partner Dashboard
 export const ADSGRAM_INTERSTITIAL_BLOCK_ID = 'int-57158';
+export const ADSGRAM_TASK_BLOCK_ID = 'task-57162';
 
 /**
  * Show Adsgram Interstitial Ad
